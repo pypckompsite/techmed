@@ -1,3 +1,8 @@
+# DO NOT USE!
+# Further commits will be provided with compatible DB
+
+
+
 import random
 import string
 from datetime import datetime, timedelta
@@ -8,6 +13,10 @@ import os
 
 from database import engine, init_db
 from models import *
+
+
+
+
 
 init_db()
 print("Adding data to db...")

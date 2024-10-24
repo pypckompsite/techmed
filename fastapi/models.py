@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-import datetime
+from datetime import datetime
 
 
 class AppointmentStatus(SQLModel, table=True):

@@ -32,7 +32,8 @@ This web application is designed to streamline the medical appointment process. 
    cd <repository-directory>
    cd fastapi
    poetry install
-   # To get DB
-   python3 database.py
-   python3 insert_mock_data.py
+   
+   # Run the backend
+   cd fastapi
+   fastapi dev main.py --reload
 
