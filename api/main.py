@@ -1,8 +1,12 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import init_db
 from auth import auth_router
-app = FastAPI()
+app = FastAPI(
+    title="TECHMED",
+    description="This web application is designed to streamline the medical appointment process. The app's main feature is the use of speech-to-text (STT) technology to transcribe appointments in real-time, and AI to transform those transcripts into a detailed appointment report.",
+    version='0.0.1',
+
+)
 
 
 app.add_middleware(

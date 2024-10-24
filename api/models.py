@@ -17,8 +17,8 @@ class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     email: str = Field(max_length=255, unique=True)
     hashed_password: str = Field(default="")
-    otp_secret: str = Field()
-    webauthn_key: str = Field()
+    otp_secret: str | None = None
+    webauthn_key: str | None = None
     type: int = Field(default=0, foreign_key="user_type.id")
     link_id: int = Field(default=None)
 

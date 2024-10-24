@@ -30,10 +30,10 @@ This web application is designed to streamline the medical appointment process. 
    ```bash
    git clone <repository-url>
    cd <repository-directory>
-   cd fastapi
+   # CREATE VENV
+
    poetry install
    
    # Run the backend
-   cd fastapi
-   fastapi dev main.py --reload
+   fastapi dev api/main.py --reload
 
