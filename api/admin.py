@@ -4,11 +4,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from security import verify_token
 from models import *
 from database import engine, get_db
-from security import hash_password, verify_password, create_access_token, generate_otp_secret, verify_otp
+from security import oauth2_scheme
 
 admin_router = APIRouter()
+
+
+@admin_router.get("/protected-route")
+def protected_route(token: Annotated[str, Depends(oauth2_scheme)]):
+    return verify_token(token).get("sub")
 
 #
 # class Token(BaseModel):

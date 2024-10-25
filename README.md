@@ -31,8 +31,11 @@ This web application is designed to streamline the medical appointment process. 
    git clone <repository-url>
    cd <repository-directory>
    # CREATE VENV
+   
 
    poetry install
+   
+   
    
    # Run the backend
    fastapi dev api/main.py --reload

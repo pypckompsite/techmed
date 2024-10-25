@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from admin import admin_router
 from auth import auth_router
 app = FastAPI(
     title="TECHMED",
@@ -26,3 +28,4 @@ def hello():
 #     init_db()
 
 app.include_router(auth_router, prefix="/auth")
+app.include_router(admin_router, prefix="/admin")
