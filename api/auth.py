@@ -198,8 +198,5 @@ def extend_session(access_token: Annotated[str | None, Cookie()] = None, db: Ses
     user = db.exec(stmt).first()
     if not user:
         raise HTTPException(HTTPException(status_code=status.HTTP_401_UNAUTHORIZED))
-    type = db.exec(UserType).where(UserType.id == user.type).first()
-    if not type:
-        return {"email": user.email, "type": "N/A"}
 
-    return {"email": user.email, "type": type.name}
+    return {"email": user.email, "type": user.type.name}
