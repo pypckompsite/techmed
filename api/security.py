@@ -41,7 +41,8 @@ def verify_token(token: str):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
+    if not token:
+        raise credentials_exception
     try:
         # Decode the JWT token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -51,3 +52,12 @@ def verify_token(token: str):
         return payload
     except JWTError:
         raise credentials_exception
+
+
+
+def encrypt_field(data: str):
+    return data
+
+
+def decrypt_field(data: str):
+    return data

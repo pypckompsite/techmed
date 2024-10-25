@@ -12,9 +12,6 @@ from security import oauth2_scheme
 admin_router = APIRouter()
 
 
-@admin_router.get("/protected-route")
-def protected_route(token: Annotated[str, Depends(oauth2_scheme)]):
-    return verify_token(token).get("sub")
 
 #
 # class Token(BaseModel):

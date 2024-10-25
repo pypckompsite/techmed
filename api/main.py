@@ -7,7 +7,7 @@ app = FastAPI(
     title="TECHMED",
     description="This web application is designed to streamline the medical appointment process. The app's main feature is the use of speech-to-text (STT) technology to transcribe appointments in real-time, and AI to transform those transcripts into a detailed appointment report.",
     version='0.0.1',
-
+    servers=[{"url": "http://localhost:8000", "description": "Local server"}]
 )
 
 
@@ -18,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+
 
 @app.get("/")
 def hello():
