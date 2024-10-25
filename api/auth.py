@@ -1,15 +1,14 @@
 from datetime import timedelta
-from tkinter.scrolledtext import example
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form, Response, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Response, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from models import *
-from database import engine, get_db
-from security import hash_password, verify_password, create_token, oauth2_scheme, verify_token
+from database import get_db
+from security import hash_password, verify_password, create_token, verify_token
 
 auth_router = APIRouter()
 
@@ -38,7 +37,8 @@ def register_user(response: Response, email: Annotated[str, Form()], password: A
     - **Purpose**: Interact with protected API resources
     """
     # Check if user already exists
-    db_user = db.query(User).where(User.email == email).first()
+    stmt = select(User).where(User.email == email)
+    db_user = db.exec(stmt).first()
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
@@ -65,8 +65,10 @@ def register_user(response: Response, email: Annotated[str, Form()], password: A
     return {"message": "Register successful"}
 
 @auth_router.post("/login", tags=['auth'])
-def login(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-db: Session = Depends(get_db)):
+def login(response: Response,
+          email: Annotated[str, Form()],
+          password: Annotated[str, Form()],
+          db: Session = Depends(get_db)):
     """
     ### Obtain Access Token
 
@@ -77,8 +79,12 @@ db: Session = Depends(get_db)):
     - **Usage**: Include the token in the `Authorization` header to authenticate requests.
     - **Purpose**: Interact with protected API resources
     """
-    db_user = db.query(User).where(User.email == form_data.username).first()
-    if not db_user or not verify_password(form_data.password, db_user.hashed_password):
+    stmt = select(User).where(User.email == email)
+    db_user = db.exec(stmt).first()
+    if not db_user:
+        hash_password(password)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    elif not verify_password(password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     else:
         access_token = create_token(data={"sub": db_user.email},
@@ -91,8 +97,6 @@ db: Session = Depends(get_db)):
             secure=True,  # Set this to True in production to only send over HTTPS
         )
         return {"message": "Login successful"}
-
-    return None
 
 
 
@@ -167,7 +171,7 @@ def extend_session(response: Response, access_token: Annotated[str | None, Cooki
 
 
 @auth_router.get("/verify_token", tags=['auth'])
-def extend_session(response: Response, access_token: Annotated[str | None, Cookie()] = None, db: Session = Depends(get_db)):
+def extend_session(access_token: Annotated[str | None, Cookie()] = None, db: Session = Depends(get_db)):
     """
     ### API Endpoint: Verify Access Token
 
@@ -190,10 +194,11 @@ def extend_session(response: Response, access_token: Annotated[str | None, Cooki
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"})
 
-    user = db.query(User).where(User.email == email).first()
+    stmt = select(User).where(User.email == email)
+    user = db.exec(stmt).first()
     if not user:
         raise HTTPException(HTTPException(status_code=status.HTTP_401_UNAUTHORIZED))
-    type = db.query(UserType).where(UserType.id == user.type).first()
+    type = db.exec(UserType).where(UserType.id == user.type).first()
     if not type:
         return {"email": user.email, "type": "N/A"}
 
