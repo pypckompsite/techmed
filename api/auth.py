@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Form, Response, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from pydantic import BaseModel
@@ -36,7 +36,7 @@ The token is valid for 2 hours, after which a new token must be obtained to cont
 
 
 @auth_router.post("/register/", tags=["auth"], description=description)
-def register_user(email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
+def register_user(response: Response, email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
     # Check if user already exists
     db_user = db.query(User).where(User.email == email).first()
     if db_user:
@@ -52,8 +52,17 @@ def register_user(email: Annotated[str, Form()], password: Annotated[str, Form()
     db.refresh(new_user)
 
     # Generate a JWT token for the newly registered user
-    access_token = create_token(data={"sub": db_user.email, "type": "refresh_token"}, expires_delta=timedelta(hours=2))
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_token(data={"sub": db_user.email},
+                               expires_delta=timedelta(hours=2))
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=1800,  # Expires in 30 minutes
+        secure=True,  # Set this to True in production to only send over HTTPS
+    )
+    return {"message": "Register successful"}
 
 description = """
 ### Obtain Access Token
@@ -67,21 +76,28 @@ The token is valid for 2 hours, after which a new token must be obtained to cont
 """
 
 @auth_router.post("/login", tags=['auth'], description=description)
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+def login(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 db: Session = Depends(get_db)):
     db_user = db.query(User).where(User.email == form_data.username).first()
     if not db_user or not verify_password(form_data.password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     else:
-        access_token = create_token(data={"sub": db_user.email, "type": "refresh_token"}, expires_delta=timedelta(hours=2))
-
-        return {"access_token": access_token, "token_type": "bearer"}
+        access_token = create_token(data={"sub": db_user.email},
+                                    expires_delta=timedelta(hours=2))
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=1800,  # Expires in 30 minutes
+            secure=True,  # Set this to True in production to only send over HTTPS
+        )
+        return {"message": "Login successful"}
 
     return None
 
 
 description = """
-### API Endpoint: Obtain Access Token
+### API Endpoint: Extend Access Token
 
 This endpoint issues an access token, required to authenticate and authorize API requests.\
 The token is valid for 2 hours, after which a new token must be obtained to continue making API calls.
@@ -91,12 +107,11 @@ The token is valid for 2 hours, after which a new token must be obtained to cont
 - **Purpose**: Interact with protected API resources
 """
 
-@auth_router.get("/get_token", tags=['auth'], description=description)
-def get_token(token: Annotated[str, Depends(oauth2_scheme)]):
+@auth_router.get("/extend_session", tags=['auth'], description=description)
+def extend_session(response: Response, access_token: Annotated[str | None, Cookie()] = None):
     try:
-        payload = verify_token(token)
+        payload = verify_token(access_token)
         email: str = payload.get("sub")
-        type: str = payload.get("type")
 
     except JWTError:
         raise HTTPException(
@@ -104,29 +119,36 @@ def get_token(token: Annotated[str, Depends(oauth2_scheme)]):
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"})
 
-    if type == "refresh_token":
-        access_token = create_token(data={"sub": email, "type": "access_token"},
-                                     expires_delta=timedelta(hours=2))
+    access_token = create_token(data={"sub": email},
+                                expires_delta=timedelta(hours=2))
 
-        return {"access_token": access_token, "token_type": "bearer"}
-
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=1800,  # Expires in 30 minutes
+        secure=True,  # Set this to True in production to only send over HTTPS
+    )
+    return {"message": "Session extend successful"}
 
 description = """
-### API Endpoint: Obtain Access Token
+### API Endpoint: Verify Access Token
 
-This endpoint issues an access token, required to authenticate and authorize API requests.\
+This endpoint allows you to obtain information about the user's access token.'
 
-- **Usage**: Include the token in the `Authorization` header to authenticate requests.
-- **Token Lifetime**: 2 hours
-- **Purpose**: Interact with protected API resources
+This returns following JSON:
+
+{
+    "email": "user@example.com",
+    "role": "patient"
+}
 """
 
-@auth_router.post("/extend_session", tags=['auth'], description=description)
-def get_token(token: Annotated[str, Form()]):
+@auth_router.get("/verify_token", tags=['auth'], description=description)
+def extend_session(response: Response, access_token: Annotated[str | None, Cookie()] = None, db: Session = Depends(get_db)):
     try:
-        payload = verify_token(token)
+        payload = verify_token(access_token)
         email: str = payload.get("sub")
-        type: str = payload.get("type")
 
     except JWTError:
         raise HTTPException(
@@ -134,8 +156,7 @@ def get_token(token: Annotated[str, Form()]):
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"})
 
-    if type == "refresh_token":
-        access_token = create_token(data={"sub": email, "type": "access_token"},
-                                     expires_delta=timedelta(hours=2))
-
-        return {"access_token": access_token, "token_type": "bearer"}
+    user = db.query(User).where(User.email == email).first()
+    if not user:
+        raise HTTPException(HTTPException(status_code=status.HTTP_401_UNAUTHORIZED))
+    return {"email": user.email, "role": user.role}
