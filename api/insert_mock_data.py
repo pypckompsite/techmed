@@ -132,6 +132,33 @@ with Session(engine) as session:
     session.add_all(prescription_items)
     session.add_all(prescriptions)
 
+    referrals = [
+        Referral(
+            referral_id=i,
+            patient_id=(i % len(patients)) + 1,  # Wybór pacjenta na podstawie i
+            doctor_id=(i % len(doctors)) + 1,    # Wybór lekarza na podstawie i
+            issue_date=date(2023, 10, i % 30 + 1),  # Przykładowe daty wystawienia
+            reason="Reason for referral {}".format(i)  # Powód skierowania
+        )
+        for i in range(1, 21)  # Tworzenie 20 skierowań
+    ]
+    session.add_all(referrals)
+
+    # Generowanie danych testowych dla wyników badań
+    test_results = [
+        TestResult(
+            test_result_id=i,
+            referral_id=(i % len(referrals)) + 1,  # Wybór skierowania na podstawie i
+            patient_id=referrals[(i % len(referrals))].patient_id,  # ID pacjenta związane z skierowaniem
+            test_name="Test for referral {}".format(i),  # Nazwa badania
+            result="Result for test {}".format(i),  # Wynik badania
+            date_performed=date(2023, 10, (i % 30) + 1)  # Przykładowa data wykonania
+        )
+        for i in range(1, 61)  # Tworzenie 60 wyników badań
+    ]
+    session.add_all(test_results)
+
+
 # Section for N-to-N combination tables
 
 

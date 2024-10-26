@@ -34,6 +34,34 @@ class DoctorSpeciality(SQLModel, table=True):
 
     doctors: list["Doctor"] = Relationship(back_populates="speciality")
 
+class Referral(SQLModel, table=True):
+    __tablename__ = "referral"
+
+    referral_id: Optional[int] = Field(default=None, primary_key=True)  # Unikalny identyfikator skierowania
+    patient_id: int = Field(foreign_key="patient.id")  # ID pacjenta
+    doctor_id: int = Field(foreign_key="doctor.id")  # ID lekarza, który wystawia skierowanie
+    issue_date: date = Field(default=None)  # Data wystawienia skierowania
+    reason: str = Field(default=None)  # Powód skierowania
+
+    patient: Optional["Patient"] = Relationship(back_populates="referrals")  # Relacja do pacjenta
+    doctor: Optional["Doctor"] = Relationship(back_populates="referrals")
+    test_result: Optional["TestResult"] = Relationship(back_populates="referral")  # Relacja 1:1
+
+
+class TestResult(SQLModel, table=True):
+    __tablename__ = "test_result"
+
+    test_result_id: Optional[int] = Field(default=None, primary_key=True)  # Unikalny identyfikator wyniku badania
+    referral_id: int = Field(foreign_key="referral.referral_id")  # ID skierowania
+    patient_id: int = Field(foreign_key="patient.id")  # ID pacjenta
+    test_name: str = Field(default=None)  # Nazwa badania
+    result: str = Field(default=None)  # Wynik badania
+    date_performed: date = Field(default=None)  # Data wykonania badania
+
+    referral: Optional[Referral] = Relationship(back_populates="test_result")  # Relacja 1:1 do skierowania
+    patient: Optional["Patient"] = Relationship(back_populates="test_results")  # Relacja do pacjenta
+
+
 class User(SQLModel, table=True):
     __tablename__ = "user"
     id: int = Field(default=None, primary_key=True)
@@ -58,8 +86,10 @@ class Patient(SQLModel, table=True):
     address: str = Field(max_length=255)
     phone_number: str = Field(max_length=16)
 
-    appointments: list["Appointment"] = Relationship(back_populates="patient")
+    appointments: List["Appointment"] = Relationship(back_populates="patient")
     prescriptions: List["Prescription"] = Relationship(back_populates="patient")  # List of prescriptions for the patient
+    referrals: List[Referral] = Relationship(back_populates="patient")
+    test_results: List[TestResult] = Relationship(back_populates="patient")
 
 class Doctor(SQLModel, table=True):
     __tablename__ = "doctor"
@@ -73,8 +103,9 @@ class Doctor(SQLModel, table=True):
     speciality_id: int = Field(default=None, foreign_key="doctor_speciality.id")
 
     speciality: DoctorSpeciality = Relationship(back_populates="doctors")
-    appointments: list["Appointment"] = Relationship(back_populates="doctor")
+    appointments: List["Appointment"] = Relationship(back_populates="doctor")
     prescriptions: List["Prescription"] = Relationship(back_populates="doctor")
+    referrals: List[Referral] = Relationship(back_populates="doctor")
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointment"
