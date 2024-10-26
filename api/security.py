@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 import pyotp
 from starlette import status
+import secrets, string
 
 # Use Argon2 for hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto",
@@ -24,8 +25,25 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Authentication credentials were not provided or are invalid.",
     )
+
+def generate_secure_password(length=16):
+    if length < 6:
+        raise ValueError("Password length must be at least 1")
+
+    # Define the character set: uppercase, lowercase, digits, and special characters
+    characters = (
+        string.ascii_uppercase +  # Uppercase letters
+        string.ascii_lowercase +  # Lowercase letters
+        string.digits +           # Digits
+        string.punctuation        # Special characters
+    )
+
+    # Generate a secure random password
+    password = ''.join(secrets.choice(characters) for _ in range(length))
+    return password
+
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

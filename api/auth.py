@@ -6,7 +6,7 @@ from jose import JWTError
 from pydantic import BaseModel, EmailStr, validator, field_validator
 from sqlmodel import Session, select
 from starlette import status
-
+import re
 
 from security import credentials_exception
 from functions import *
@@ -15,55 +15,10 @@ from database import get_db
 from security import hash_password, verify_password, create_token, verify_token
 
 auth_router = APIRouter()
-email_regex = r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"
-email_pattern = re.compile(email_regex, re.IGNORECASE)
 
 
-with open("wordlist_pl.txt", 'r') as file:
-    weak_passwords_set = {line.strip() for line in file if line.strip()}
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-def validate_email(email: str) -> bool:
-    return bool(email_pattern.fullmatch(email))
-
-# Define the Pydantic model with validation
-class UserRegistration(BaseModel):
-    email: str
-    password: str
-
-    @field_validator("email")
-    def validate_email(cls, value):
-
-        if not validate_email(value):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address")
-        return value
-    # Password complexity validator
-    @field_validator("password")
-    def validate_password(cls, value):
-        if len(value) < 12:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The password must be at least 12 characters long.")
-        if value in weak_passwords_set:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This password is considered too weak")
-        return value
-
-
-class ChangePassword(BaseModel):
-    current_password: str
-    new_password: str
-
-    @field_validator("new_password")
-    def validate_password(cls, value):
-        if len(value) < 12:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The password must be at least 12 characters long.")
-        if value in weak_passwords_set:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This password is considered too weak")
-        return value
-
-
-@auth_router.post("/register/", tags=["auth"])
+@auth_router.post("/register/", tags=["User Management"])
 def register_user(response: Response, email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
     """
     ### Register a New User
@@ -103,7 +58,7 @@ def register_user(response: Response, email: Annotated[str, Form()], password: A
     )
     return {"message": "Register successful"}
 
-@auth_router.post("/login", tags=['auth'])
+@auth_router.post("/login", tags=['Auth'])
 def login(response: Response,
           email: Annotated[str, Form()],
           password: Annotated[str, Form()],
@@ -135,7 +90,7 @@ def login(response: Response,
 
 
 
-@auth_router.post("/change_password", summary="Change User Password", tags=["auth"])
+@auth_router.post("/change_password", summary="Change current user's password", tags=["User Management"])
 async def change_user_password(
         current_password: Annotated[str, Form()],
         new_password: Annotated[str, Form()],
@@ -152,7 +107,7 @@ async def change_user_password(
     """
     email = payload["sub"]
 
-    data = ChangePassword(current_password=current_password, new_password=new_password)
+    data = ChangePassword(current_password=current_password, password=new_password)
 
     stmt = select(User).where(User.email == email)
     user = db.exec(stmt).first()
@@ -163,7 +118,7 @@ async def change_user_password(
             detail="Current password is incorrect"
         )
 
-    user.hashed_password = hash_password(data.new_password)
+    user.hashed_password = hash_password(data.password)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -171,7 +126,7 @@ async def change_user_password(
     return {"message": "Password change successful"}
 
 
-@auth_router.get("/extend_session", tags=['auth'])
+@auth_router.get("/extend_session", tags=['Auth'])
 def extend_session(response: Response, payload: dict = Depends(verify_token)):
     """
     ### API Endpoint: Extend Access Token
@@ -196,7 +151,7 @@ def extend_session(response: Response, payload: dict = Depends(verify_token)):
     return {"message": "Session extend successful"}
 
 
-@auth_router.get("/verify_token", tags=['auth'])
+@auth_router.get("/verify_token", tags=['Auth'])
 def extend_session(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
     """
     ### API Endpoint: Verify Access Token
@@ -220,6 +175,7 @@ def extend_session(db: Session = Depends(get_db), payload: dict = Depends(verify
     return {"email": user.email, "type": user.type.name}
 
 
-@auth_router.get("/get-my-info", tags=['development'])
+#TODO: Finish writing this
+@auth_router.get("/get_my_info", tags=['User Management'])
 def get_info(payload: dict = Depends(get_my_info)):
    return payload

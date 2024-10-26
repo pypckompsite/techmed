@@ -66,6 +66,8 @@ def insert_mock_data():
             User(email=f"user{i}@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type_id=1, link_id=1)
             for i in range(0, 10)  # Create 10 users
         ]
+        admin = User(email=f"admin@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type_id=3, link_id=1)
+        users.append(admin)
         session.add_all(users)
 
         # Patients
@@ -171,3 +173,5 @@ def insert_mock_data():
         session.commit()
 
         print("Done")
+
+insert_mock_data()

@@ -10,8 +10,8 @@ from security import verify_token, credentials_exception
 from database import get_db
 
 
-def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get_db)):
-
+def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get_db)) -> dict:
+    print(db)
     email = payload['sub']
 
     stmt = select(User).where(User.email == email)
@@ -20,11 +20,9 @@ def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get
     if not user:
         raise credentials_exception
 
-    print(user.type.name)
-
     if user.type.name == "Patient":
-        stmt = select(Patient).where(Patient.id == user.link_id)
-        patient = db.exec(stmt).first()
+        print(db)
+        patient = db.query(Patient).where(Patient.id == user.link_id).first()
 
         if not patient:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
@@ -47,7 +45,7 @@ def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get
         #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
         #
         # return {"email": user.email, "type": user.type.name, 'Patient': patient}
-        return "UNIMPLEMENTED"
+        return {"email": user.email, "type": user.type.name, 'Admin': "UNIMPLEMENTED"}
 
     elif user.type.name == "Unassigned":
 
@@ -55,3 +53,5 @@ def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get
 
     else:
         return {"email": user.email, "type": "Other"}
+
+

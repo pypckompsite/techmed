@@ -4,54 +4,126 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from security import verify_token
+from security import generate_secure_password, hash_password
+from functions import *
 from models import *
 from database import engine, get_db
-from security import oauth2_scheme
+from security import credentials_exception
 
 admin_router = APIRouter()
 
 
+def strip_sensitive_user_data(user_data_list: dict, db: Session = Depends(get_db)):
+    # Define the keys to keep
+    keys_to_keep = ["id", "link_id", "email", "type_id"]
 
-#
-# class Token(BaseModel):
-#     access_token: str
-#     token_type: str
-#
-# class UserCreate(BaseModel):
-#     email: str
-#     password: str
-#
-# @auth_router.post("/register/", tags=["auth"], description="Register a new user in the system")
-# def register_user(email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
-#     # Check if user already exists
-#     db_user = db.query(User).where(User.email == email).first()
-#     if db_user:
-#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
-#
-#     # Hash the password
-#     hashed_password = hash_password(password)
-#
-#     # Create a new user
-#     new_user = User(email=email, hashed_password=hashed_password)
-#     db.add(new_user)
-#     db.commit()
-#     db.refresh(new_user)
-#
-#     # Generate a JWT token for the newly registered user
-#     access_token = create_access_token(data={"sub": new_user.email})
-#     return {"access_token": access_token, "token_type": "bearer"}
-#
-#
-#
-# @auth_router.post("/login", tags=['auth'], description="Allows you to obtain login token")
-# def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-# db: Session = Depends(get_db)):
-#     db_user = db.query(User).where(User.email == form_data.username).first()
-#     if not db_user or not verify_password(form_data.password, db_user.hashed_password):
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
-#     else:
-#         access_token = create_access_token(data={"sub": db_user.email})
-#         return {"access_token": access_token, "token_type": "bearer"}
-#
-#     return None
+    # Create a new list to hold stripped data
+    stripped_data_list = []
+
+    for user_data in user_data_list:
+        # Initialize a new dictionary for stripped data
+        stripped_data = {}
+
+        # Manually add allowed keys to the stripped_data dictionary
+        stripped_data["id"] = user_data.id
+        stripped_data["email"] = user_data.email
+        stripped_data["mfa_type"] = user_data.mfa_type
+        stripped_data["type"] = user_data.type.name
+
+        # Append the stripped data to the list
+        stripped_data_list.append(stripped_data)
+
+    return stripped_data_list
+
+@admin_router.get("/users", tags=["User Management"])
+def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
+    """Retrieve a list of all registered users in the system"""
+
+    if not payload or payload["type"] != "Admin":
+        raise credentials_exception
+
+    stmt = select(User)
+    users = db.exec(stmt).all()
+
+    #Strip sensitive data
+    users_stripped = strip_sensitive_user_data(users)
+
+    return(users_stripped)
+
+
+def get_my_info_test() -> dict:
+    # Example payload for demonstration, replace with actual logic
+    return {"type": "Admin"}
+
+@admin_router.get("/users/{user_id}", tags=["User Management"])
+def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+    """Fetch detailed information about a specific user by their ID"""
+
+    if not payload or payload["type"] != "Admin":
+        raise credentials_exception
+
+    stmt = select(User).where(User.id == user_id)
+    user = db.exec(stmt).first()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
+
+
+    if user.type.name == "Patient":
+        print(db)
+        patient = db.query(Patient).where(Patient.id == user.link_id).first()
+
+        if not patient:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
+        return {"email": user.email, "type": user.type.name, 'Patient': patient}
+
+    elif user.type.name == "Doctor":
+        stmt = select(Doctor).where(Doctor.id == user.link_id)
+        doctor = db.exec(stmt).first()
+
+        if not doctor:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
+
+        return {"email": user.email, "type": user.type.name, 'Doctor': Doctor}
+
+    elif user.type.name == "Admin":
+        # stmt = select(Patient).where(Patient.id == user.link_id)
+        # patient = db.exec(stmt).first()
+        #
+        # if not patient:
+        #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
+        #
+        # return {"email": user.email, "type": user.type.name, 'Patient': patient}
+        return {"email": user.email, "type": user.type.name, 'Admin': "UNIMPLEMENTED"}
+
+    elif user.type.name == "Unassigned":
+
+        return {"email": user.email, "type": user.type.name}
+
+    else:
+        return {"email": user.email, "type": "Other"}
+
+
+
+
+
+@admin_router.post("/patients/add", tags=["User Management"])
+def create_new_user(new_user_data: NewPatient, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+    """Create a new patient account and profile with the provided information."""
+
+    if not payload or payload["type"] != "Admin":
+        raise credentials_exception
+
+    new_patient = Patient(first_name=new_user_data.first_name, middle_name=new_user_data.middle_name, last_name=new_user_data.last_name, PESEL=new_user_data.PESEL, gender=new_user_data.gender, address=new_user_data.address, phone_number=new_user_data.phone_number)
+    db.add(new_patient)
+    db.commit()
+    db.refresh(new_patient)
+
+    password: str = generate_secure_password()
+
+    new_user = User(email=new_user_data.email, hashed_password=hash_password(password), type_id = 1, link_id=new_patient.id)
+
+    db.add(new_user)
+    db.commit()
+
+    return None

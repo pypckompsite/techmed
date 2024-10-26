@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
@@ -80,17 +82,14 @@ def test_register_same_email():    #User with same email
 def test_register_invalid_email():
     response = client.post("/auth/register", data={"email": "test", "password": "%*Secure*Password12345"})
     assert response.status_code == 400
-    assert len(client.cookies.get("access_token")) > 0
 
 def test_register_invalid_password():
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": "pass"})
     assert response.status_code == 400
-    assert len(client.cookies.get("access_token")) > 0
 
 def test_register_weak_password():
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": "123hfjdk147"})
     assert response.status_code == 400
-    assert len(client.cookies.get("access_token")) > 0
 
 
 
@@ -126,13 +125,13 @@ def test_change_password_invalid_current_password():
     response = client.post("/auth/change_password", data={"current_password": "password1", "new_password": "bardzobezpiecznehaslo"})
     assert response.status_code == 401
 
-def test_change_password_onvalid_new_password():
+def test_change_password_invalid_new_password():
     response = client.post("/auth/login", data={"email": "user1@example.com", "password": "password"})
     assert response.status_code == 200
     assert len(client.cookies.get("access_token")) > 0
 
     response = client.post("/auth/change_password", data={"current_password": "password", "new_password": "qwerty"})
-    assert response.status_code == 401
+    assert response.status_code == 400
 
 
 def test_verify_token_valid():
@@ -164,8 +163,35 @@ def test_extend_session_valid():
     payload = jwt.decode(response.cookies['access_token'], SECRET_KEY, algorithms=[ALGORITHM])
     exp_pre = payload['exp']
 
+    time.sleep(2)
+
     response = client.get("/auth/extend_session")
     assert response.status_code == 200
     payload = jwt.decode(response.cookies['access_token'], SECRET_KEY, algorithms=[ALGORITHM])
     exp_post = payload['exp']
     assert exp_post > exp_pre
+
+
+def test_admin_create_patient():
+    response = client.post("/auth/login", data={"email": "admin@example.com", "password": "password"})
+    assert response.status_code == 200
+    assert len(client.cookies.get("access_token")) > 0
+
+    patient_data = {
+        "email": "test@example.com",
+        "first_name": "John",
+        "middle_name": "A.",
+        "last_name": "Doe",
+        "PESEL": "12345678901",
+        "gender": "M",
+        "address": "123 Main St, City, Country",
+        "phone_number": "123456789"
+    }
+
+    response = client.post("/admin/patients/add", json=patient_data)
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Patient created"
+    assert (response.json()["patient_temp_password"]
+            and response.json()["patient_temp_password"] is not None
+            and len(response.json()["patient_temp_password"]) > 12)
