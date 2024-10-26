@@ -5,6 +5,7 @@
 
 from sqlmodel import create_engine, Session, SQLModel
 
+
 from security import hash_password
 from models import *
 
@@ -12,7 +13,10 @@ from models import *
 DATABASE_URL = "sqlite:///orm.db"
 engine = create_engine(DATABASE_URL)
 
+SQLModel.metadata.drop_all(engine)
 SQLModel.metadata.create_all(engine)
+
+
 
 
 print("Adding data to db...")
@@ -31,6 +35,7 @@ with Session(engine) as session:
         session.commit()
     except Exception as e:
         print("Table UserType already exist")
+        raise e
 
     try:
         appointment_statuses = [
@@ -44,6 +49,7 @@ with Session(engine) as session:
         session.commit()
     except Exception as e:
         print("Table AppointmentStatus already exists")
+        raise e
 
 
 with Session(engine) as session:
@@ -93,6 +99,38 @@ with Session(engine) as session:
         for i in range(1, 21)  # Create 20 appointments
     ]
     session.add_all(appointments)
+
+    drugs = [
+        Drug(drug_id=1, name="Aspirin", form="Tablet", strength="500mg"),
+        Drug(drug_id=2, name="Amoxicillin", form="Capsule", strength="250mg"),
+        Drug(drug_id=3, name="Ibuprofen", form="Tablet", strength="200mg")
+    ]
+    session.add_all(drugs)
+
+    prescriptions = [
+        Prescription(
+            prescription_id=i,
+            doctor_id=(i % len(doctors)) + 1,  # Wybór lekarza na podstawie i
+            patient_id=(i % len(patients)) + 1,  # Wybór pacjenta na podstawie i
+            issue_date=date(2023, 10, i % 30 + 1),  # Przykładowe daty wystawienia
+            expiration_date=date(2023, 12, i % 30 + 1),  # Przykładowe daty ważności
+            notes="Notes for prescription {}".format(i),  # Uwagi
+            status=PrescriptionStatus.active if i % 2 == 0 else PrescriptionStatus.purchased  # Status na podstawie i
+        )
+        for i in range(1, 21)  # Tworzenie 20 recept
+    ]
+    prescription_items = [
+        PrescriptionItem(
+            item_id=i,
+            prescription_id=(i % len(prescriptions)) + 1,  # Wybór recepty na podstawie i
+            drug_id=(i % len(drugs)) + 1,  # Wybór leku na podstawie i
+            dosage="Dosage for item {}".format(i),  # Przykładowe dawkowanie
+            quantity=(i % 10) + 1  # Ilość na podstawie i (1-10)
+        )
+        for i in range(1, 61)  # Tworzenie 60 pozycji recept
+    ]
+    session.add_all(prescription_items)
+    session.add_all(prescriptions)
 
 # Section for N-to-N combination tables
 

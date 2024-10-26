@@ -14,3 +14,6 @@ def init_db():
 def get_db():
     with Session(engine) as session:
         yield session
+
+def drop_db():
+    SQLModel.metadata.drop_all(engine)

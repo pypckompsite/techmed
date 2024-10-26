@@ -1,8 +1,15 @@
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import datetime,date
+from enum import Enum
+from typing import Optional, List
 
 from database import engine
 
+
+class PrescriptionStatus(str, Enum):
+    active = "Active"
+    purchased = "Purchased"
+    canceled = "Canceled"
 
 class AppointmentStatus(SQLModel, table=True):
     __tablename__ = "appointment_status"
@@ -52,6 +59,7 @@ class Patient(SQLModel, table=True):
     phone_number: str = Field(max_length=16)
 
     appointments: list["Appointment"] = Relationship(back_populates="patient")
+    prescriptions: List["Prescription"] = Relationship(back_populates="patient")  # List of prescriptions for the patient
 
 class Doctor(SQLModel, table=True):
     __tablename__ = "doctor"
@@ -66,6 +74,7 @@ class Doctor(SQLModel, table=True):
 
     speciality: DoctorSpeciality = Relationship(back_populates="doctors")
     appointments: list["Appointment"] = Relationship(back_populates="doctor")
+    prescriptions: List["Prescription"] = Relationship(back_populates="doctor")
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointment"
@@ -84,4 +93,38 @@ class Appointment(SQLModel, table=True):
     patient: Patient = Relationship(back_populates="appointments")
 
 
+class Prescription(SQLModel, table=True):
+    __tablename__ = "prescription"
+    prescription_id: int = Field(default=None, primary_key=True)  # Unique identifier for the prescription
+    doctor_id: int = Field(foreign_key="doctor.id")  # Doctor's ID
+    patient_id: int = Field(foreign_key="patient.id")  # Patient's ID
+    issue_date: date = Field(default=None)  # Issue date
+    expiration_date: date = Field(default=None)  # Expiration date
+    notes: Optional[str] = Field(default=None)  # Doctor's notes
+    status: PrescriptionStatus = Field(default=None)  # Prescription status
+
+    doctor: Optional[Doctor] = Relationship(back_populates="prescriptions")     # Relationship to Doctor
+    patient: Optional[Patient] = Relationship(back_populates="prescriptions")   # Relationship to Patient
+    items: List["PrescriptionItem"] = Relationship(back_populates="prescriptions")  # Relationship to PrescriptionItem
+
+
+class Drug(SQLModel, table=True):
+    __tablename__ = "drug"
+    drug_id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the drug
+    name: str = Field(default=None)  # Drug name
+    form: str = Field(default=None)  # Form of the drug
+    strength: str = Field(default=None)  # Strength of the drug
+
+    prescription_items: List["PrescriptionItem"] = Relationship(back_populates="drug")  # Relationship to PrescriptionItem
+
+class PrescriptionItem(SQLModel, table=True):
+    __tablename__ = "prescriptionitem"
+    item_id: int = Field(default=None, primary_key=True)  # Unique identifier for the prescription item
+    prescription_id: int = Field(foreign_key="prescription.prescription_id")  # ID of the prescription this item belongs to
+    drug_id: int = Field(foreign_key="drug.drug_id") # Drug name
+    dosage: str = Field(default=None)  # Drug dosage
+    quantity: int = Field(default=None)  # Quantity of drug
+
+    prescriptions: Optional[Prescription] = Relationship(back_populates="items")  # Relationship to Prescription table
+    drug: Optional[Drug] = Relationship(back_populates="prescription_items")
 
