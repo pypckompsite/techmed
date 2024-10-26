@@ -23,7 +23,7 @@ app.add_middleware(
 
 @app.get("/")
 def hello():
-    return "Hello World!"
+    return 'Hello World!'
 
 # @app.on_event("startup")
 # def on_startup():

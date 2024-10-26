@@ -32,11 +32,16 @@ This web application is designed to streamline the medical appointment process. 
    cd <repository-directory>
    # CREATE VENV
    
+   pip install poetry
 
    poetry install
-   
-   
+
    
    # Run the backend
-   fastapi dev api/main.py --reload
+   cd api
+   fastapi dev main.py --reload
 
+2. If you want to get the db to a fresh state, delete the db file and run the insert_mock_data.py
+3. ```bash
+   rm orm.db
+   python3 insert_mock_data.py

@@ -36,7 +36,7 @@ class User(SQLModel, table=True):
     otp_secret: str | None = None
     webauthn_key: str | None = None
     type_id: int = Field(default=0, foreign_key="user_type.id")
-    link_id: int = Field(default=None)
+    link_id: int | None = Field(default=None)
 
     type: UserType = Relationship(back_populates="users")
 
@@ -71,7 +71,7 @@ class Appointment(SQLModel, table=True):
     __tablename__ = "appointment"
     id: int = Field(default=None, primary_key=True)
     date: datetime = Field(default=None)
-    status_id: int = Field(default=0, foreign_key="appointment_status.id")  # Ensure this refers to the correct AppointmentStatus table
+    status_id: int = Field(default=1, foreign_key="appointment_status.id")  # Ensure this refers to the correct AppointmentStatus table
     doctor_id: int = Field(foreign_key='doctor.id')
     patient_id: int = Field(foreign_key='patient.id')
     reason: str = Field(default=None)
