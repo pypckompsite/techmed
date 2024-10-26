@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 
 from admin import admin_router
@@ -19,15 +20,18 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.middleware("http")
+async def mock_https_middleware(request: Request, call_next):
+    request.scope["scheme"] = "https"  # Mock HTTPS
+    response = await call_next(request)
+    return response
 
 
 @app.get("/")
 def hello():
     return 'Hello World!'
 
-# @app.on_event("startup")
-# def on_startup():
-#     init_db()
+
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(admin_router, prefix="/admin")
