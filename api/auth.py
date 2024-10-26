@@ -1,4 +1,3 @@
-import re
 from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Response, Cookie
@@ -14,6 +13,7 @@ from functions import *
 from models import *
 from database import get_db
 from security import hash_password, verify_password, create_token, verify_token
+
 auth_router = APIRouter()
 email_regex = r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"
 email_pattern = re.compile(email_regex, re.IGNORECASE)
@@ -22,6 +22,9 @@ email_pattern = re.compile(email_regex, re.IGNORECASE)
 with open("wordlist_pl.txt", 'r') as file:
     weak_passwords_set = {line.strip() for line in file if line.strip()}
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 def validate_email(email: str) -> bool:
     return bool(email_pattern.fullmatch(email))
@@ -199,6 +202,13 @@ def extend_session(db: Session = Depends(get_db), payload: dict = Depends(verify
     ### API Endpoint: Verify Access Token
 
     This endpoint allows you to obtain information about the user's access token.'
+
+    This returns following JSON:
+
+    {
+        "email": "user@example.com",
+        "type": "patient"
+    }
     """
     email: str = payload.get("sub")
 
