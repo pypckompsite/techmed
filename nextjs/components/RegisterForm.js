@@ -6,13 +6,14 @@ export default function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false); // Nowy stan do określenia sukcesu
   const router = useRouter(); // Inicjalizacja routera
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Wysyłanie danych do endpointu FastAPI
-    const res = await fetch('/auth/register/', {
+    const res = await fetch("http://127.0.0.1:8000/auth/register/", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -25,6 +26,7 @@ export default function RegisterForm() {
 
     if (res.ok) {
       setMessage('Zarejestrowano poprawnie');
+      setIsSuccess(true); // Ustawia flagę sukcesu
       setEmail('');
       setPassword('');
       setTimeout(() => {
@@ -33,6 +35,7 @@ export default function RegisterForm() {
     } else {
       const errorData = await res.json();
       setMessage(errorData.detail || 'Wystąpił błąd'); // Ustawiamy komunikat błędu
+      setIsSuccess(false); // Ustawia flagę błędu
     }
   };
 
@@ -83,24 +86,22 @@ export default function RegisterForm() {
                         />
                       </div>
                       <button
-                      type="submit"
-                      className="btn btn-lg btn-block mt-3"
-                      style={{
-                        backgroundColor: '#042F43',
-                        color: '#fff',
-                        display: 'block',
-                        width: '100%',
-                      }}
-                    >
+                        type="submit"
+                        className="btn btn-lg btn-block mt-3"
+                        style={{
+                          backgroundColor: '#042F43',
+                          color: '#fff',
+                          display: 'block',
+                          width: '100%',
+                        }}
+                      >
                         Zarejestruj
                       </button>
                     </fieldset>
                   </form>
                   {message && (
                     <p
-                      className={`text-center mt-3 ${
-                        res.ok ? 'text-success' : 'text-danger'
-                      }`}
+                      className={`text-center mt-3 ${isSuccess ? 'text-success' : 'text-danger'}`}
                     >
                       {message}
                     </p>

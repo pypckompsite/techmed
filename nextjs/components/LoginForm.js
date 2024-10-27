@@ -7,6 +7,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false); // Nowy stan do określenia sukcesu
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -30,7 +31,8 @@ export default function LoginForm() {
   
     // Oczekiwanie na odpowiedź
     if (res.ok) {
-      setMessage('Login successful');
+      setMessage('Zalogowano pomyślnie');
+      setIsSuccess(true); // Ustawia flagę sukcesu
       setTimeout(() => {
         router.push('/profile');
       }, 2000);
@@ -44,8 +46,9 @@ export default function LoginForm() {
       } else if (typeof errorData.detail === 'string') {
         setMessage(errorData.detail);
       } else {
-        setMessage('An error occurred');
+        setMessage('Wystąpił błąd');
       }
+      setIsSuccess(false); // Ustawia flagę błędu
     }
   };  
 
@@ -108,7 +111,11 @@ export default function LoginForm() {
                     </button>
                   </fieldset>
                 </form>
-                {message && <p className="text-center mt-3 text-danger">{message}</p>}
+                {message && (
+                  <p className={`text-center mt-3 ${isSuccess ? 'text-success' : 'text-danger'}`}>
+                    {message}
+                  </p>
+                )}
                 <div className="text-center mt-3">
                   <p>Nie masz konta?</p>
                   <Link href="/register">
