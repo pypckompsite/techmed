@@ -20,6 +20,35 @@ class PrescriptionStatus(str, Enum):
     purchased = "Purchased"
     canceled = "Canceled"
 
+
+class FacilityType(str, Enum):
+    HOSPITAL = "Hospital"
+    CLINIC = "Clinic"
+    LABORATORY = "Laboratory"
+    PHARMACY = "Pharmacy"
+
+
+class DoctorFacilityAssociation(SQLModel, table=True):
+    __tablename__ = "doctor_facility_association"
+
+    doctor_id: Optional[int] = Field(default=None, foreign_key="doctor.id", primary_key=True)
+    facility_id: Optional[int] = Field(default=None, foreign_key="medical_facility.facility_id", primary_key=True)
+
+class MedicalFacility(SQLModel, table=True):
+    __tablename__ = "medical_facility"
+
+    facility_id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(max_length=100, description="Nazwa placówki medycznej")
+    address: str = Field(max_length=255, description="Adres placówki")
+    phone_number: str = Field(max_length=15, description="Numer telefonu placówki")
+    facility_type: FacilityType = Field(description="Typ placówki (np. Szpital, Przychodnia)")
+    website: Optional[str] = Field(default=None, description="Strona internetowa placówki")
+    operating_hours: Optional[str] = Field(default=None, description="Godziny otwarcia placówki")
+
+    doctors: List["Doctor"] = Relationship(back_populates="facilities", link_model=DoctorFacilityAssociation)
+
+
+
 class AppointmentStatus(SQLModel, table=True):
     __tablename__ = "appointment_status"
     id: int = Field(default=None, primary_key=True)
@@ -115,6 +144,7 @@ class Doctor(SQLModel, table=True):
     appointments: List["Appointment"] = Relationship(back_populates="doctor")
     prescriptions: List["Prescription"] = Relationship(back_populates="doctor")
     referrals: List[Referral] = Relationship(back_populates="doctor")
+    facilities: List[MedicalFacility] = Relationship(back_populates="doctors", link_model=DoctorFacilityAssociation)
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointment"
@@ -174,7 +204,7 @@ email_regex = r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"
 email_pattern = re.compile(email_regex, re.IGNORECASE)
 
 
-with open("wordlist_pl.txt", 'r') as file:
+with open("wordlist_pl.txt", 'r', encoding="utf-8") as file:
     weak_passwords_set = {line.strip() for line in file if line.strip()}
 
 

@@ -165,6 +165,58 @@ def insert_mock_data():
         ]
         session.add_all(test_results)
 
+        facilities = [
+            MedicalFacility(
+                facility_id=1,
+                name="General Hospital",
+                address="123 Main St, Cityville",
+                phone_number="123-456-7890",
+                facility_type=FacilityType.HOSPITAL,
+                website="http://generalhospital.com",
+                operating_hours="Mon-Fri 8:00-20:00, Sat 8:00-14:00"
+            ),
+            MedicalFacility(
+                facility_id=2,
+                name="Downtown Clinic",
+                address="456 Broad Ave, Cityville",
+                phone_number="123-555-0199",
+                facility_type=FacilityType.CLINIC,
+                website="http://downtownclinic.com",
+                operating_hours="Mon-Fri 9:00-17:00"
+            ),
+            MedicalFacility(
+                facility_id=3,
+                name="City Labs",
+                address="789 Maple St, Cityville",
+                phone_number="123-555-1122",
+                facility_type=FacilityType.LABORATORY,
+                website="http://citylabs.com",
+                operating_hours="Mon-Fri 7:00-19:00"
+            ),
+            MedicalFacility(
+                facility_id=4,
+                name="Main Street Pharmacy",
+                address="101 Elm St, Cityville",
+                phone_number="123-555-1212",
+                facility_type=FacilityType.PHARMACY,
+                website="http://mainstreetpharmacy.com",
+                operating_hours="Mon-Sun 8:00-22:00"
+            )
+        ]
+        session.add_all(facilities)
+
+        # Section for N-to-N combination tables
+        doctor_facility_associations = [
+            DoctorFacilityAssociation(doctor_id=1, facility_id=1),
+            DoctorFacilityAssociation(doctor_id=2, facility_id=1),
+            DoctorFacilityAssociation(doctor_id=3, facility_id=2),
+            DoctorFacilityAssociation(doctor_id=1, facility_id=3),
+            DoctorFacilityAssociation(doctor_id=4, facility_id=4),
+            DoctorFacilityAssociation(doctor_id=2, facility_id=2),
+            DoctorFacilityAssociation(doctor_id=5, facility_id=1),
+        ]
+        session.add_all(doctor_facility_associations)
+
 
     # Section for N-to-N combination tables
 
