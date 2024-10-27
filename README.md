@@ -42,6 +42,6 @@ This web application is designed to streamline the medical appointment process. 
    fastapi dev main.py --reload
 
 2. If you want to get the db to a fresh state, delete the db file and run the insert_mock_data.py
-3. ```bash
+   ```bash
    rm orm.db
    python3 insert_mock_data.py

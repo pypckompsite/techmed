@@ -195,3 +195,40 @@ def test_admin_create_patient():
     assert (response.json()["patient_temp_password"]
             and response.json()["patient_temp_password"] is not None
             and len(response.json()["patient_temp_password"]) > 12)
+
+
+def test_list_users_admin():
+    response = client.post("/auth/login", data={"email": "admin@example.com", "password": "password"})
+    assert response.status_code == 200
+    assert len(client.cookies.get("access_token")) > 0
+
+    response = client.get("/admin/users")
+    assert response.status_code == 200
+    assert response.json()[0] == { "id": 1,   "email": "user0@example.com",  "mfa_type": None, "type": "Patient" }
+
+
+
+def test_list_users_admin():
+    response = client.post("/auth/login", data={"email": "admin@example.com", "password": "password"})
+    assert response.status_code == 200
+    assert len(client.cookies.get("access_token")) > 0
+
+    response = client.get("/admin/users/3")
+    assert response.status_code == 200
+    assert response.json() == {
+                                  "email": "user2@example.com",
+                                  "type": "Patient",
+                                  "Patient": {
+                                    "id": 1,
+                                    "last_name": "PatientLastName0",
+                                    "gender": "M",
+                                    "phone_number": "1234567890",
+                                    "first_name": "PatientFirstName0",
+                                    "middle_name": "PatientMiddleName0",
+                                    "PESEL": "00000000000",
+                                    "address": "0 Main St, City, Country"
+                                  }
+                                }
+
+
+

@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from security import generate_secure_password, hash_password
 from functions import *
@@ -55,6 +55,24 @@ def get_my_info_test() -> dict:
     # Example payload for demonstration, replace with actual logic
     return {"type": "Admin"}
 
+
+# @admin_router.get("/patients", tags=["User Management"])
+# def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
+#     """Retrieve a list of all registered users in the system"""
+#
+#     if not payload or payload["type"] != "Admin":
+#         raise credentials_exception
+#
+#     return [{"message": "NOT IMPLEMENTED"}]
+#     # stmt = select(Patient)
+#     # patients = db.exec(stmt).all()
+#     #
+#     # #Strip sensitive data
+#     # patients_stripped = strip_sensitive_patient_data(patients)
+#     #
+#     # return(patients_stripped)
+
+
 @admin_router.get("/users/{user_id}", tags=["User Management"])
 def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific user by their ID"""
@@ -104,8 +122,38 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
         return {"email": user.email, "type": "Other"}
 
 
+@admin_router.get("/patients/{pesel}", tags=["DEV_NOT_FINAL"])
+def get_patient_info_endpoint(pesel: str, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+    """Fetch detailed information about a specific patient by their PESEL number"""
+
+    if not payload or payload["type"] != "Admin":
+        raise credentials_exception
+
+# , func.count(Patient.appointments)
+    stmt = select(Patient).where(Patient.PESEL == pesel)
+    print(stmt)
+    patient = db.exec(stmt).first()
+
+    if not patient:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Patient not found")
 
 
+    return patient
+
+    id: int = Field(default=None, primary_key=True)
+    first_name: str = Field(max_length=32)
+    middle_name: str | None = Field(max_length=32)
+    last_name: str = Field(max_length=64)
+    PESEL: str = Field(max_length=11)
+    gender: str = Field(max_length=1)
+    address: str = Field(max_length=255)
+    phone_number: str = Field(max_length=16)
+
+    appointments: List["Appointment"] = Relationship(back_populates="patient")
+    prescriptions: List["Prescription"] = Relationship(
+        back_populates="patient")  # List of prescriptions for the patient
+    referrals: List[Referral] = Relationship(back_populates="patient")
+    test_results: List[TestResult] = Relationship(back_populates="patient")
 
 @admin_router.post("/patients/add", tags=["User Management"])
 def create_new_user(new_user_data: NewPatient, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
