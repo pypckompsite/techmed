@@ -1,32 +1,56 @@
 import { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false); // Nowy stan do określenia sukcesu
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('/auth/login', {
+  
+    // Logowanie danych przed wysłaniem
+    console.log('Email:', email, 'Password:', password);
+  
+    const requestBody = new URLSearchParams({
+      email,
+      password,
+    }).toString();
+  
+    const res = await fetch("http://127.0.0.1:8000/auth/login", {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/x-www-form-urlencoded', 
       },
-      body: new URLSearchParams({
-        email,
-        password,
-      }).toString(),
+      body: requestBody,
     });
-
+  
+    // Oczekiwanie na odpowiedź
     if (res.ok) {
-      setMessage('Login successful');
+      setMessage('Zalogowano pomyślnie');
+      setIsSuccess(true); // Ustawia flagę sukcesu
+      setTimeout(() => {
+        router.push('/profile');
+      }, 2000);
     } else {
       const errorData = await res.json();
-      setMessage(errorData.detail || 'An error occurred');
+      console.log('Error Data:', errorData); // Logowanie błędów
+      
+      // Obsługa błędów
+      if (Array.isArray(errorData.detail)) {
+        setMessage(errorData.detail.map((error) => error.msg).join(', '));
+      } else if (typeof errorData.detail === 'string') {
+        setMessage(errorData.detail);
+      } else {
+        setMessage('Wystąpił błąd');
+      }
+      setIsSuccess(false); // Ustawia flagę błędu
     }
-  };
+  };  
 
   return (
     <div
@@ -87,9 +111,11 @@ export default function LoginForm() {
                     </button>
                   </fieldset>
                 </form>
-                {message && <p className="text-center mt-3 text-danger">{message}</p>}
-                
-                {/* Przycisk do rejestracji */}
+                {message && (
+                  <p className={`text-center mt-3 ${isSuccess ? 'text-success' : 'text-danger'}`}>
+                    {message}
+                  </p>
+                )}
                 <div className="text-center mt-3">
                   <p>Nie masz konta?</p>
                   <Link href="/register">
