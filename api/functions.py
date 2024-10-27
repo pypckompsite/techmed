@@ -11,7 +11,6 @@ from database import get_db
 
 
 def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get_db)) -> dict:
-    print(db)
     email = payload['sub']
 
     stmt = select(User).where(User.email == email)
@@ -21,7 +20,6 @@ def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get
         raise credentials_exception
 
     if user.type.name == "Patient":
-        print(db)
         patient = db.query(Patient).where(Patient.id == user.link_id).first()
 
         if not patient:

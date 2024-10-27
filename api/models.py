@@ -230,7 +230,7 @@ class EmailMixin(BaseModel):
     def validate_email(cls, value):
 
         if not validate_email(value):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email address must be valid")
         return value
 
 
@@ -242,7 +242,7 @@ class ChangePassword(PasswordMixin):
     current_password: str
 
 class PESELMixin(BaseModel):
-    PESEL: constr(min_length=11, max_length=11)
+    PESEL: str
 
     @field_validator("PESEL")
     def validate_pesel(cls, value):
@@ -294,42 +294,48 @@ class NewPatient(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
     @field_validator("first_name")
     def validate_first_name(cls, value):
         if not value:
-            raise ValueError("First name cannot be empty.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="First name cannot be empty.")
         if not all(
-                c.isalpha() or c in "' -." for c in value):  # Allowing letters, apostrophes, spaces, hyphens, and dots
-            raise ValueError(
-                "First name must contain only letters and valid characters (e.g., spaces, hyphens, apostrophes, dots).")
+                c.isalpha() for c in value):  # Allowing letters
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="First name must contain only letters")
         if len(value) > 50:
-            raise ValueError("First name must be at most 50 characters long.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="First name must be at most 50 characters long.")
         return value
 
     @field_validator("middle_name")
     def validate_middle_name(cls, value):
-        if value and not all(c.isalpha() or c in "' -." for c in value):
-            raise ValueError(
-                "Middle name must contain only letters and valid characters (e.g., spaces, hyphens, apostrophes, dots).")
+        if value and not all(c.isalpha() for c in value):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Middle name must contain only letters")
         if value and len(value) > 50:
-            raise ValueError("Middle name must be at most 50 characters long.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Middle name must be at most 50 characters long.")
         return value
 
     @field_validator("last_name")
     def validate_last_name(cls, value):
         if not value:
-            raise ValueError("Last name cannot be empty.")
-        if not all(c.isalpha() or c in "' -." for c in value):
-            raise ValueError(
-                "Last name must contain only letters and valid characters (e.g., spaces, hyphens, apostrophes, dots).")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Last name cannot be empty.")
+        if not all(c.isalpha() for c in value):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Last name must contain only letters")
         if len(value) > 50:
-            raise ValueError("Last name must be at most 50 characters long.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Last name must be at most 50 characters long.")
         return value
 
     @field_validator("address")
     def validate_address(cls, value):
         if not value:
-            raise ValueError("Address cannot be empty.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Address cannot be empty.")
         # Allow letters, digits, spaces, commas, periods, hyphens, and special characters
         if not re.match(r"^[\w\s,.'-]+$", value):
-            raise ValueError("Address contains invalid characters.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Address contains invalid characters.")
         if len(value) > 255:
-            raise ValueError("Address must be at most 255 characters long.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Address must be at most 255 characters long.")
         return value
+
+
+class NewDoctor(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
+    first_name: constr(min_length=3, max_length=32)
+    middle_name: Optional[constr(max_length=32)]
+    last_name: constr(min_length=3, max_length=32)
+    license_number: constr(min_length=5, max_length=5)
+    hire_date: date
+    speciality_id: int
