@@ -27,6 +27,7 @@ export default function LoginForm() {
         'Content-Type': 'application/x-www-form-urlencoded', 
       },
       body: requestBody,
+      credentials: "include",
     });
   
     // Oczekiwanie na odpowiedź
@@ -34,7 +35,7 @@ export default function LoginForm() {
       setMessage('Zalogowano pomyślnie');
       setIsSuccess(true); // Ustawia flagę sukcesu
       setTimeout(() => {
-        router.push('/profile');
+        router.push('/zalogowany');
       }, 2000);
     } else {
       const errorData = await res.json();
