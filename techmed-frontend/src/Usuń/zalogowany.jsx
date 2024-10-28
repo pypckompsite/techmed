@@ -1,5 +1,5 @@
 // pages/index.js
-import LoggedInForm from '../components/LoggedInForm.jsx';
+import LoggedInForm from '@/src/app/patient/patient-info/page.jsx';
 
 export default function Home() {
     return (

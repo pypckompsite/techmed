@@ -1,5 +1,5 @@
-// pages/register.js
-import RegisterForm from '../components/RegisterForm';
+// pages/page.jsx
+import RegisterForm from '../app/register/page';
 
 export default function RegisterPage() {
   return (
