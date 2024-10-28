@@ -1,9 +1,9 @@
-// pages/index.js
+import LoginForm from '../components/LoginForm';
+
 export default function Home() {
     return (
-      <div>
-        <h1>Welcome to Next.js!</h1>
-      </div>
+        <div>
+            <LoginForm />
+        </div>
     );
-  }
-  
+}
