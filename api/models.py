@@ -339,3 +339,35 @@ class NewDoctor(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
     license_number: constr(min_length=5, max_length=5)
     hire_date: date
     speciality_id: int
+
+    @field_validator("first_name")
+    def validate_first_name(cls, value):
+        if not value:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="First name cannot be empty.")
+        if not all(
+                c.isalpha() for c in value):  # Allowing letters
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="First name must contain only letters")
+        if len(value) > 50:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="First name must be at most 50 characters long.")
+        return value
+
+    @field_validator("middle_name")
+    def validate_middle_name(cls, value):
+        if value and not all(c.isalpha() for c in value):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Middle name must contain only letters")
+        if value and len(value) > 50:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Middle name must be at most 50 characters long.")
+        return value
+
+    @field_validator("last_name")
+    def validate_last_name(cls, value):
+        if not value:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Last name cannot be empty.")
+        if not all(c.isalpha() for c in value):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Last name must contain only letters")
+        if len(value) > 50:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Last name must be at most 50 characters long.")
+        return value
