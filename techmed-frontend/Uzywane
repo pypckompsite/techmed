@@ -3,3 +3,5 @@ tailwind css - framework do css - nie ma pliku css, każdy element css to KLASA 
 js
 nextjs & react
 shadcn - biblioteka gotowych dostosowywalnych elementów
+ESLint
+Turbopack

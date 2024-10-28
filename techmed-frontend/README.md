@@ -1,5 +1,62 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+Aplikacja stworzona w Next.js, która może służyć jako baza do dalszego rozwoju projektu.
+
+## Wymagania
+
+- [Node.js](https://nodejs.org/) (wersja 14 lub nowsza)
+- (opcjonalnie) [npm](https://www.npmjs.com/) lub [yarn](https://yarnpkg.com/) (menedżer pakietów)
+
+## Instalacja
+
+Sklonuj repozytorium:
+
+    ```bash
+    git clone https://github.com/twoj-profil/nazwa-repozytorium.git
+    cd nazwa-repozytorium
+    ```
+
+2. Zainstaluj zależności:
+
+   Jeśli używasz npm:
+
+    ```bash
+    npm install
+    ```
+
+   Jeśli używasz yarn:
+
+    ```bash
+    yarn install
+    ```
+Struktura plików w repozytorium
+Poniżej lista kluczowych plików i katalogów, które warto dołączyć do repozytorium:
+
+- pages/ - Główne widoki aplikacji Next.js
+- components/ - Komponenty wielokrotnego użytku
+- public/ - Zasoby statyczne (np. obrazy)
+- styles/ - Pliki ze stylami aplikacji
+- package.json - Lista zależności i skrypty uruchamiające aplikację
+- next.config.js - Konfiguracja Next.js
+- .gitignore - Lista plików i katalogów ignorowanych przez git (np. node_modules, .env.local)
+
+Skrypty
+- dev - Uruchamia aplikację w trybie deweloperskim
+- build - Buduje aplikację do wdrożenia
+- start - Uruchamia aplikację produkcyjną po zbudowaniu
+
+Użycie ESLint
+Projekt jest skonfigurowany z ESLint, aby zapewnić wysoką jakość kodu. Możesz uruchomić lintowanie, używając:
+
+bash
+Skopiuj kod
+npm run lint
+Aby automatycznie naprawić błędy, możesz użyć:
+
+bash
+Skopiuj kod
+npm run lint -- --fix
+
 ## Getting Started
 
 First, run the development server:
