@@ -30,10 +30,14 @@ This web application is designed to streamline the medical appointment process. 
    ```bash
    git clone <repository-url>
    cd <repository-directory>
-   # CREATE VENV
+   # CREATE VENV AND SET PYTHON INTERPRETER
+   # MAKE SURE YOU ARE IN (venv) 
+   # UPDATE PIP  python.exe -m pip install --upgrade pip
    
    pip install poetry
 
+   poetry install
+   poetry lock [--no-update]
    poetry install
 
    
