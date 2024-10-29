@@ -4,10 +4,10 @@ from fastapi.params import Depends
 from sqlmodel import select, Session
 from starlette import status
 
-from models import Doctor
-from models import User, Patient
-from security import verify_token, credentials_exception
-from database import get_db
+from api.models import Doctor
+from api.models import User, Patient
+from api.security import verify_token, credentials_exception
+from api.database import get_db
 
 
 def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get_db)) -> dict:

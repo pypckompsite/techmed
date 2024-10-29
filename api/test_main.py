@@ -4,10 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from main import app
-from insert_mock_data import insert_mock_data
+from api.main import app
+from api.insert_mock_data import insert_mock_data
 
-from security import SECRET_KEY, ALGORITHM
+from api.security import SECRET_KEY, ALGORITHM
 
 client = TestClient(app, base_url="https://localhost:8000")
 

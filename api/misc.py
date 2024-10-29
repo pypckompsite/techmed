@@ -5,11 +5,11 @@ from pycparser.ply.yacc import token
 from pydantic import BaseModel
 from sqlmodel import Session, select, func
 
-from security import generate_secure_password, hash_password
-from functions import *
-from models import *
-from database import engine, get_db
-from security import credentials_exception
+from api.security import generate_secure_password, hash_password
+from api.functions import *
+from api.models import *
+from api.database import engine, get_db
+from api.security import credentials_exception
 
 
 misc_router = APIRouter()
@@ -25,3 +25,14 @@ def get_doctor_specialities(db: Session = Depends(get_db), payload: dict = Depen
     specialities = db.exec(stmt).all()
 
     return specialities
+
+@misc_router.get("/get_appointment_statuses", tags=["misc"])
+def get_doctor_specialities(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
+
+    if not payload:
+        raise credentials_exception
+
+    stmt = select(AppointmentStatus)
+    statusses = db.exec(stmt).all()
+
+    return statusses

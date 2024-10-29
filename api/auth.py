@@ -1,18 +1,13 @@
 from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Response, Cookie
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError
-from pydantic import BaseModel, EmailStr, validator, field_validator
-from sqlmodel import Session, select
-from starlette import status
-import re
 
-from security import credentials_exception
-from functions import *
-from models import *
-from database import get_db
-from security import hash_password, verify_password, create_token, verify_token
+from api.security import credentials_exception
+from api.functions import *
+from api.models import *
+from api.database import get_db
+from api.security import hash_password, verify_password, create_token, verify_token
+from api.schemas import *
 
 auth_router = APIRouter()
 
