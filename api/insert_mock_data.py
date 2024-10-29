@@ -7,7 +7,7 @@ from sqlmodel import create_engine, Session, SQLModel
 
 
 from security import hash_password
-from models import *
+from api.models import *
 
 
 DATABASE_URL = "sqlite:///orm.db"
