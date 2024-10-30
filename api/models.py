@@ -10,7 +10,6 @@ from typing import Optional, List
 from starlette import status
 from websockets.sync.server import basic_auth
 
-from api.database import engine
 
 #IMPORTANT: Database models
 

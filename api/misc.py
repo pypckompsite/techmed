@@ -5,7 +5,6 @@ from pycparser.ply.yacc import token
 from pydantic import BaseModel
 from sqlmodel import Session, select, func
 
-from api.security import generate_secure_password, hash_password
 from api.functions import *
 from api.models import *
 from api.database import engine, get_db

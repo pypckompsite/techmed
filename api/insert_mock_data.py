@@ -6,7 +6,6 @@
 from sqlmodel import create_engine, Session, SQLModel
 
 
-from security import hash_password
 from api.models import *
 
 
