@@ -1,11 +1,11 @@
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Form, Response, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
 
 from api.security import credentials_exception
 from api.functions import *
 from api.models import *
-from api.database import get_db
+from backend.api.database import get_db
 from api.security import hash_password, verify_password, create_token, verify_token
 from api.schemas import *
 

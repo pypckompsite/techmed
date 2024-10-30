@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.admin import admin_router
+from backend.api.admin import admin_router
 from api.auth import auth_router
 from api.misc import misc_router
 
 
 from api.doctor.main import doctor_router
-from api.patient.main import patient_router
+
 app = FastAPI(
     title="TECHMED",
     description="This web application is designed to streamline the medical appointment process. The app's main feature is the use of speech-to-text (STT) technology to transcribe appointments in real-time, and AI to transform those transcripts into a detailed appointment report.",

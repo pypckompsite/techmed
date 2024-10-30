@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from api.main import app
+from backend.api.main import app
 from api.insert_mock_data import insert_mock_data
 
 from api.security import SECRET_KEY, ALGORITHM
