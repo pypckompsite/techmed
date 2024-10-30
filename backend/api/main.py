@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.admin import admin_router
+from api.admin import admin_router
 from api.auth import auth_router
 from api.misc import misc_router
 

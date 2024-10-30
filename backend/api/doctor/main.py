@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 
 from api.functions import *
 from api.models import *
-from backend.api.database import get_db
+from api.database import get_db
 from api.security import credentials_exception
 
 

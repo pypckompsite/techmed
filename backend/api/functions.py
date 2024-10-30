@@ -7,7 +7,7 @@ from starlette import status
 from api.models import Doctor
 from api.models import User, Patient
 from api.security import verify_token, credentials_exception
-from backend.api.database import get_db
+from api.database import get_db
 
 
 def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get_db)) -> dict:
