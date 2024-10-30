@@ -2,7 +2,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from  "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -60,7 +63,7 @@ export default function LoginForm() {
 
             // Obsługa błędów
             if (Array.isArray(errorData.detail)) {
-                setMessage(errorData.detail.map((error) => error.msg).join(', '));
+                setMessage(errorData.detail.map((error) => error).join(', '));
             } else if (typeof errorData.detail === 'string') {
                 setMessage(errorData.detail);
             } else {
@@ -71,69 +74,57 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="container mt-5 pt-5">
-            <div className="row">
-                <div className="col-9 col-sm-7 col-md-6 m-auto">
-                    <div className="card border-0 shadow">
-                        <div className="card-body">
-                            <div className="text-center">
-                                <img src="/logo.png" alt="User Icon" style={{ height: '5em' }} />
-                            </div>
-                            <h1 className="text-center mt-4 mb-4">Zaloguj się</h1>
-                            <form onSubmit={handleSubmit}>
-                                <fieldset>
-                                    <div className="form-group">
-                                        <label htmlFor="email">Adres E-mail:</label>
-                                        <input
-                                            className="form-control"
-                                            placeholder="E-mail"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label htmlFor="password">Hasło:</label>
-                                        <input
-                                            className="form-control"
-                                            placeholder="Hasło"
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        className="btn btn-lg btn-block mt-3"
-                                        style={{
-                                            backgroundColor: '#042F43',
-                                            color: '#fff',
-                                            display: 'block',
-                                            width: '100%',
-                                        }}
-                                    >
-                                        Zaloguj się
-                                    </button>
-                                </fieldset>
-                            </form>
-                            {message && (
-                                <p className={`text-center mt-3 ${isSuccess ? 'text-success' : 'text-danger'}`}>
-                                    {message}
-                                </p>
-                            )}
-                            <div className="text-center mt-3">
-                                <p>Nie masz konta?</p>
-                                <Link href="/register">
-                                    <button className="btn btn-secondary">
-                                        Zarejestruj się
-                                    </button>
-                                </Link>
-                            </div>
+        <div className="flex justify-center items-center min-h-screen bg-gray-50">
+            <Card className="w-full max-w-md shadow-lg">
+                <CardHeader className="text-center">
+                    <img src="/logo.png" alt="User Icon" className="mx-auto h-20 mb-4" />
+                    <CardTitle className="text-2xl">Zaloguj się</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="email">Adres E-mail:</Label>
+                            <Input
+                                id="email"
+                                placeholder="E-mail"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="mt-1"
+                            />
                         </div>
+                        <div>
+                            <Label htmlFor="password">Hasło:</Label>
+                            <Input
+                                id="password"
+                                placeholder="Hasło"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="mt-1"
+                            />
+                        </div>
+                        <Button type="submit" className="w-full bg-blue-600 text-white mt-4">
+                            Zaloguj się
+                        </Button>
+                    </form>
+                    {message && (
+                        <p className={`mt-3 text-center ${isSuccess ? "text-green-500" : "text-red-500"}`}>
+                            {message}
+                        </p>
+                    )}
+                    <div className="text-center mt-4">
+                        <p>Nie masz konta?</p>
+                        <Link href="/register">
+                            <Button variant="outline" className="mt-2">
+                                Zarejestruj się
+                            </Button>
+                        </Link>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }
