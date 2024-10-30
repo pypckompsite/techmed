@@ -170,7 +170,7 @@ def extend_session(db: Session = Depends(get_db), payload: dict = Depends(verify
     return {"email": user.email, "type": user.type.name}
 
 
-#TODO: Finish writing this
+
 @auth_router.get("/get_my_info", tags=['User Management'])
 def get_info(payload: dict = Depends(get_my_info)):
    return payload
