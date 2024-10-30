@@ -1,7 +1,10 @@
 "use client"
 import {useState} from 'react';
-import {useRouter} from 'next/navigation'; // Importujemy useRouter do przekierowania
-import 'bootstrap/dist/css/bootstrap.min.css';
+import {useRouter} from 'next/navigation';
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button"; // Importujemy useRouter do przekierowania
 
 export default function RegisterForm() {
     const [email, setEmail] = useState('');
@@ -41,66 +44,49 @@ export default function RegisterForm() {
     };
 
     return (
-        <section className="w-100">
-            <div className="container mt-5 pt-5">
-                <div className="row">
-                    <div className="col-9 col-sm-7 col-md-6 mx-auto">
-                        <div className="card border-0 shadow">
-                            <div className="card-body">
-                                <div className="text-center">
-                                    <img src="/logo.png" alt="User Icon" style={{height: '5em'}}/>
-                                </div>
-                                <h1 className="text-center mt-4 mb-4">Utwórz konto</h1>
-                                <form onSubmit={handleSubmit}>
-                                    <fieldset>
-                                        <div className="form-group">
-                                            <label htmlFor="email">Adres E-mail:</label>
-                                            <input
-                                                className="form-control"
-                                                placeholder="Wprowadź E-mail"
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label htmlFor="password">Hasło:</label>
-                                            <input
-                                                className="form-control"
-                                                placeholder="Wprowadź hasło"
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            className="btn btn-lg btn-block mt-3"
-                                            style={{
-                                                backgroundColor: '#042F43',
-                                                color: '#fff',
-                                                display: 'block',
-                                                width: '100%',
-                                            }}
-                                        >
-                                            Zarejestruj
-                                        </button>
-                                    </fieldset>
-                                </form>
-                                {message && (
-                                    <p
-                                        className={`text-center mt-3 ${isSuccess ? 'text-success' : 'text-danger'}`}
-                                    >
-                                        {message}
-                                    </p>
-                                )}
-                            </div>
+        <section className="flex justify-center items-center min-h-screen min-w-[600px]">
+            <Card className="w-full max-w-md shadow-lg">
+                <CardHeader className="text-center">
+                    <img src="/logo.png" alt="User Icon" className="mx-auto h-20 mb-4" />
+                    <CardTitle className="text-2xl">Utwórz konto</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="email">Adres E-mail:</Label>
+                            <Input
+                                id="email"
+                                placeholder="Wprowadź E-mail"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="mt-1"
+                            />
                         </div>
-                    </div>
-                </div>
-            </div>
+                        <div>
+                            <Label htmlFor="password">Hasło:</Label>
+                            <Input
+                                id="password"
+                                placeholder="Wprowadź hasło"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="mt-1"
+                            />
+                        </div>
+                        <Button type="submit" className="w-full mt-4">
+                            Zarejestruj
+                        </Button>
+                    </form>
+                    {message && (
+                        <p className={`mt-3 text-center ${isSuccess ? "text-green-500" : "text-red-500"}`}>
+                            {message}
+                        </p>
+                    )}
+                </CardContent>
+            </Card>
         </section>
     );
 }

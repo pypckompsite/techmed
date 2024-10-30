@@ -106,7 +106,7 @@ export default function LoginForm() {
                                 className="mt-1"
                             />
                         </div>
-                        <Button type="submit" className="w-full text-white mt-4">
+                        <Button type="submit" className="w-full mt-4">
                             Zaloguj się
                         </Button>
                     </form>
