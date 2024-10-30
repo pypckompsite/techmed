@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Form, Response, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
 
 from api.security import credentials_exception
 from api.functions import *

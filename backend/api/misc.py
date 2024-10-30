@@ -1,13 +1,9 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordRequestForm
-from pycparser.ply.yacc import token
-from pydantic import BaseModel
-from sqlmodel import Session, select, func
+from fastapi import APIRouter, Depends
+from sqlmodel import Session, select
 
 from api.functions import *
 from api.models import *
-from api.database import engine, get_db
+from api.database import get_db
 from api.security import credentials_exception
 
 
