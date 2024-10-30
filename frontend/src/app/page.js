@@ -39,8 +39,6 @@ export default function HomePage() {
                         medycznej pacjentów, co usprawnia diagnostykę, przepływ informacji oraz kontrolę nad
                         dokumentami.
                     </p>
-                    <Link href="/about" passHref>
-                    </Link>
                 </CardContent>
             </Card>
 
