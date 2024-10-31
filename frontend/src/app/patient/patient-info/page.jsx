@@ -1,6 +1,8 @@
-"use client"
-import {useState, useEffect} from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+"use client";
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 
 export default function PatientInfoPanel() {
     const [userInfo, setUserInfo] = useState(null); // Stan na dane użytkownika
@@ -36,76 +38,47 @@ export default function PatientInfoPanel() {
     }, []);
 
     return (
-        <div className="container mt-5 pt-5">
-            <div className="row justify-content-center">
-                <div className="col-10 col-sm-8 col-md-6 col-lg-5">
-                    <div className="card shadow-lg border-0 rounded" style={{overflow: 'hidden'}}>
-                        <div
-                            className="card-header text-center"
-                            style={{
-                                backgroundColor: '#042F43',
-                                color: '#ffffff',
-                                padding: '1.5em',
-                                fontSize: '1.5em',
-                                fontWeight: 'bold',
-                                letterSpacing: '1px',
-                                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
-                            }}
-                        >
-                            Dane użytkownika
+        <div className="container mx-auto mt-5 pt-5">
+            <div className="flex justify-center">
+                <Card className="max-w-md shadow-lg">
+                    <CardHeader className="bg-[#042F43] text-white text-center py-4">
+                        <CardTitle className="text-lg font-bold">Dane użytkownika</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 bg-gray-50">
+                        <div className="text-center mb-4">
+                            <Image
+                                src="/logo.png"
+                                alt="User Icon"
+                                height={80}
+                                width={80}
+                                className="rounded-full border-2 border-[#042F43] p-1"
+                            />
                         </div>
-                        <div className="card-body p-4" style={{backgroundColor: '#f9f9f9'}}>
-                            <div className="text-center mb-4">
-                                <img src="/logo.png" alt="User Icon" style={{
-                                    height: '80px',
-                                    borderRadius: '50%',
-                                    border: '2px solid #042F43',
-                                    padding: '5px'
-                                }}/>
-                            </div>
-                            {message && (
-                                <p className="text-center text-danger mb-3"
-                                   style={{fontSize: '1.1em', fontWeight: '500'}}>
-                                    {message}
-                                </p>
-                            )}
-                            {userInfo ? (
-                                <div style={{lineHeight: '1.8', color: '#333'}}>
-                                    <div className="mb-4 p-3" style={{
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: '8px',
-                                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                        <h5 style={{color: '#042F43', fontWeight: '600'}}>Informacje ogólne</h5>
-                                        <p style={{fontSize: '1.05em'}}><strong>Email:</strong> {userInfo.email}</p>
-                                        <p style={{fontSize: '1.05em'}}><strong>Typ konta:</strong> {userInfo.type}</p>
-                                    </div>
-                                    <div className="mb-3 p-3" style={{
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: '8px',
-                                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                        <h5 style={{color: '#042F43', fontWeight: '600'}}>Szczegóły pacjenta</h5>
-                                        <p style={{fontSize: '1.05em'}}>
-                                            <strong>Imię:</strong> {userInfo.Patient.first_name}</p>
-                                        <p style={{fontSize: '1.05em'}}>
-                                            <strong>Nazwisko:</strong> {userInfo.Patient.last_name}</p>
-                                        <p style={{fontSize: '1.05em'}}><strong>PESEL:</strong> {userInfo.Patient.PESEL}
-                                        </p>
-                                        <p style={{fontSize: '1.05em'}}>
-                                            <strong>Adres:</strong> {userInfo.Patient.address}</p>
-                                        <p style={{fontSize: '1.05em'}}>
-                                            <strong>Telefon:</strong> {userInfo.Patient.phone_number}</p>
-                                    </div>
+                        {message && (
+                            <p className="text-center text-red-500 mb-3 font-medium">{message}</p>
+                        )}
+                        {userInfo ? (
+                            <div className="text-gray-800">
+                                <div className="mb-4 p-3 border border-gray-300 rounded-lg shadow-md">
+                                    <h5 className="text-[#042F43] font-semibold">Informacje ogólne</h5>
+                                    <p><strong>Email:</strong> {userInfo.email}</p>
+                                    <p><strong>Typ konta:</strong> {userInfo.type}</p>
                                 </div>
-                            ) : (
-                                !message &&
-                                <p className="text-center" style={{fontSize: '1.2em', color: '#555'}}>Ładowanie
-                                    danych...</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                                <div className="mb-3 p-3 border border-gray-300 rounded-lg shadow-md">
+                                    <h5 className="text-[#042F43] font-semibold">Szczegóły pacjenta</h5>
+                                    <p><strong>Imię:</strong> {userInfo.Patient.first_name}</p>
+                                    <p><strong>Nazwisko:</strong> {userInfo.Patient.last_name}</p>
+                                    <p><strong>PESEL:</strong> {userInfo.Patient.PESEL}</p>
+                                    <p><strong>Adres:</strong> {userInfo.Patient.address}</p>
+                                    <p><strong>Telefon:</strong> {userInfo.Patient.phone_number}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            !message &&
+                            <p className="text-center text-gray-500">Ładowanie danych...</p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

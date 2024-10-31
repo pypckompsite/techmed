@@ -14,8 +14,8 @@ export default function LoginForm() {
     const [isSuccess, setIsSuccess] = useState(false);
     const router = useRouter();
 
-    const validateEmail = (email) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validateEmail = (email) => {//TODO: poprawic regex
+        const re = /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/;
         return re.test(String(email).toLowerCase());
     };
 
@@ -106,7 +106,7 @@ export default function LoginForm() {
                                 className="mt-1"
                             />
                         </div>
-                        <Button type="submit" className="w-full text-white mt-4">
+                        <Button type="submit" className="w-full mt-4">
                             Zaloguj się
                         </Button>
                     </form>
