@@ -39,7 +39,6 @@ export default function HomePage() {
                     </p>
                 </CardContent>
             </Card>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl">
                 {[ // Lista kart z informacjami
                     { title: "Bezpieczny dostęp do dokumentacji", text: "Techmed zapewnia pełne bezpieczeństwo i zgodność z regulacjami ochrony danych, pozwalając na bezpieczne przechowywanie i przetwarzanie dokumentów medycznych." },

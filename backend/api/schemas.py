@@ -11,7 +11,7 @@ email_regex = r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"
 email_pattern = re.compile(email_regex, re.IGNORECASE)
 
 
-with open("api/wordlist_pl.txt", 'r', encoding="utf-8") as file:
+with open("wordlist_pl.txt", 'r', encoding="utf-8") as file:
     weak_passwords_set = {line.strip() for line in file if line.strip()}
 
 
