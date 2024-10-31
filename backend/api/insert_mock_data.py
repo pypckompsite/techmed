@@ -27,46 +27,17 @@ def insert_mock_data():
 
     with Session(engine) as session:
 
-    # Section for dictionaries
-        try:
-            user_types = [
-                UserType(id=0, name="Unassigned"),
-                UserType(id=1, name="Patient"),
-                UserType(id=2, name="Doctor"),
-                UserType(id=3, name="Admin"),
-            ]
-            session.add_all(user_types)
-            session.commit()
-        except Exception as e:
-            print("Table UserType already exist")
-            raise e
-
-        try:
-            appointment_statuses = [
-                AppointmentStatus(id=1, name="Scheduled"),
-                AppointmentStatus(id=2, name="In Progress"),
-                AppointmentStatus(id=3, name="Completed"),
-                AppointmentStatus(id=4, name="No Show"),
-                AppointmentStatus(id=5, name="Cancelled"),
-            ]
-            session.add_all(appointment_statuses)
-            session.commit()
-        except Exception as e:
-            print("Table AppointmentStatus already exists")
-            raise e
-
-
-    with Session(engine) as session:
-
     # Section for 'main' tables
 
         # Users
         users = [
-            User(email=f"user{i}@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type_id=1, link_id=1)
+            User(email=f"user{i}@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Patient, link_id=1)
             for i in range(0, 10)  # Create 10 users
         ]
-        admin = User(email=f"admin@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type_id=3, link_id=1)
+        admin = User(email=f"admin@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Admin, link_id=1)
+        doctor = User(email=f"doctor@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Doctor, link_id=1)
         users.append(admin)
+        users.append(doctor)
         session.add_all(users)
 
         # Patients
@@ -97,19 +68,40 @@ def insert_mock_data():
         session.add_all(doctors)
 
         # Appointments
-        appointments = [
-            Appointment(date=datetime(2024, 1, i, 10 + i % 5, 0), status_id=(i % 3) + 1,
+        appointments_scheduled = [
+            Appointment(date=datetime(2024, 12, i, 10 + i % 5, 0), status=AppointmentStatus.SCHEDULED,
                         doctor_id=(i % len(doctors)) + 1, patient_id=(i % len(patients)) + 1,
                         reason="Reason for appointment", treatment_plan="Treatment plan",
                         diagnosis="Diagnosis", recommendations="Recommendations")
             for i in range(1, 21)  # Create 20 appointments
         ]
-        session.add_all(appointments)
+
+        appointments_canceled = [
+            Appointment(date=datetime(2024, 10, i, 10 + i % 5, 0), status=AppointmentStatus.CANCELLED,
+                        doctor_id=(i % len(doctors)) + 1, patient_id=(i % len(patients)) + 1,
+                        reason="Reason for appointment", treatment_plan="Treatment plan",
+                        diagnosis="Diagnosis", recommendations="Recommendations")
+            for i in range(1, 21)  # Create 20 appointments
+        ]
+
+        appointments_completed = [
+            Appointment(date=datetime(2024, 10, i, 10 + i % 5, 0), status=AppointmentStatus.COMPLETED,
+                        doctor_id=(i % len(doctors)) + 1, patient_id=(i % len(patients)) + 1,
+                        reason="Reason for appointment", treatment_plan="Treatment plan",
+                        diagnosis="Diagnosis", recommendations="Recommendations")
+            for i in range(1, 21)  # Create 20 appointments
+        ]
+
+        session.add_all(appointments_scheduled)
+        session.add_all(appointments_canceled)
+        session.add_all(appointments_completed)
 
         drugs = [
-            Drug(drug_id=1, name="Aspirin", form="Tablet", strength="500mg"),
-            Drug(drug_id=2, name="Amoxicillin", form="Capsule", strength="250mg"),
-            Drug(drug_id=3, name="Ibuprofen", form="Tablet", strength="200mg")
+            Drug(drug_id=1, name="Aspirin", form="Tablet", strength="500mg", active_substance="acetylsalicylic acid"),
+            Drug(drug_id=2, name="Amoxil", form="Capsule", strength="250mg", active_substance="Amoxicillin"),
+            Drug(drug_id=3, name="Advil", form="Tablet", strength="200mg", active_substance="Ibuprofen"),
+            Drug(drug_id=4, name="Ibuprofen", form="Tablet", strength="200mg", active_substance="Ibuprofen"),
+            Drug(drug_id=5, name="Ibum", form="Tablet", strength="200mg", active_substance="Ibuprofen")
         ]
         session.add_all(drugs)
 

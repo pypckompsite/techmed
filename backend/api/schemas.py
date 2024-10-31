@@ -2,9 +2,12 @@ import re
 
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, constr
+from sqlmodel import SQLModel
 from starlette import status
 from typing import Optional, List
 from datetime import datetime,date
+
+from api.models import *
 
 
 email_regex = r"^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$"
@@ -178,3 +181,38 @@ class NewDoctor(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Last name must be at most 50 characters long.")
         return value
+
+
+
+class PatientStripped(SQLModel):
+    first_name: str
+    middle_name: str | None
+    last_name: str
+    gender: str
+
+class UserStripped(SQLModel):
+    id: int
+    email: str
+    mfa_type: str | None
+
+    type: UserType
+
+class DoctorStripped(SQLModel):
+    first_name: str = Field(max_length=32)
+    middle_name: str = Field(max_length=32)
+    last_name: str = Field(max_length=64)
+    phone_number: str = Field(max_length=16)
+    license_number: str = Field(max_length=16)
+    hire_date: str = Field(max_length=11)
+
+    speciality: DoctorSpeciality = Relationship(back_populates="doctors")
+    facilities: List[MedicalFacility] = Relationship(back_populates="doctors", link_model=DoctorFacilityAssociation)
+
+
+class AppointmentWithPatient(SQLModel):
+    date: datetime
+    reason: Optional[str]
+    diagnosis: Optional[str]
+    status: AppointmentStatus
+    patient: PatientStripped  # Include patient information in the response
+

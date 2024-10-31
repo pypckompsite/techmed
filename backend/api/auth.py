@@ -13,7 +13,7 @@ auth_router = APIRouter()
 
 
 
-@auth_router.post("/register/", tags=["User Management"])
+@auth_router.post("/register/", status_code=status.HTTP_201_CREATED, tags=["User Management"])
 def register_user(response: Response, email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
     """
     ### Register a New User
@@ -68,6 +68,7 @@ def login(response: Response,
     db_user = db.exec(stmt).first()
     if not db_user:
         hash_password(password)
+        print("No such user")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     elif not verify_password(password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")

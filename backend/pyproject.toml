@@ -17,6 +17,7 @@ pyotp = "^2.9.0"
 webauthn = {version = "^2.2.0", optional = true}
 python-jose = "^3.3.0"
 pytest = "^8.3.3"
+gunicorn = "^23.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from backend.api.main import app
+from api.main import app
 from api.insert_mock_data import insert_mock_data
 
 from api.security import SECRET_KEY, ALGORITHM
@@ -36,7 +36,7 @@ def test_login_auth_invalidpassword():
 
 def test_register_auth_valid():
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": "%*Secure*Password12345"})
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.cookies.get("access_token")) > 0
 
 def test_register_auth_valid_longpassword():
@@ -66,13 +66,13 @@ Zieloną, na niej z rzadka ciche grusze siedzą."""
 
 
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": password})
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.cookies.get("access_token")) > 0
 
 def test_register_same_email():    #User with same email
     response = client.post("/auth/register",
                            data={"email": "test@techmed.stasiak", "password": "%*Secure*Password12345"})
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.cookies.get("access_token")) > 0
 
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": "%*Secure*Password12345"})
@@ -95,7 +95,7 @@ def test_register_weak_password():
 
 def test_register_login_auth_valid():
     response = client.post("/auth/register", data={"email": "test@techmed.stasiak", "password": "%*Secure*Password12345"})
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert len(client.cookies.get("access_token")) > 0
 
     response = client.post("/auth/login", data={"email": "test@techmed.stasiak", "password": "%*Secure*Password12345"})
@@ -189,7 +189,7 @@ def test_admin_create_patient():
 
     response = client.post("/admin/patients/add", json=patient_data)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["message"] == "Patient created"
     assert (response.json()["patient_temp_password"]
             and response.json()["patient_temp_password"] is not None
@@ -404,7 +404,7 @@ def test_admin_create_patient_already_exists():
 
     response = client.post("/admin/patients/add", json=patient_data)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     response = client.post("/admin/patients/add", json=patient_data)
 

@@ -14,36 +14,9 @@ from api.schemas import *
 admin_router = APIRouter()
 
 
-def strip_sensitive_user_data(user_data_list: dict, db: Session = Depends(get_db)):
-
-    # Create a new list to hold stripped data
-    stripped_data_list = []
-
-    for user_data in user_data_list:
-        # Initialize a new dictionary for stripped data
-        stripped_data = {"id": user_data.id, "email": user_data.email, "mfa_type": user_data.mfa_type,
-                         "type": user_data.type.name}
-
-        # Append the stripped data to the list
-        stripped_data_list.append(stripped_data)
-
-    return stripped_data_list
-
-def strip_sensitive_patient_data(patient_data: dict, db: Session = Depends(get_db)):
-    # Define the keys to keep
-
-    # Create a new list to hold stripped data
-
-    # Initialize a new dictionary for stripped data
-    stripped_data = {"first_name": patient_data.first_name, "middle_name": patient_data.middle_name,
-                     "last_name": patient_data.last_name, "PESEL": patient_data.PESEL,
-                     "gender": patient_data.gender}
 
 
-    return stripped_data
-
-
-@admin_router.get("/users", tags=["User Management"])
+@admin_router.get("/users", tags=["User Management"], response_model=List[UserStripped])
 def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all registered users in the system"""
 
@@ -53,10 +26,8 @@ def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info
     stmt = select(User)
     users = db.exec(stmt).all()
 
-    #Strip sensitive data
-    users_stripped = strip_sensitive_user_data(users)
 
-    return(users_stripped)
+    return(users)
 
 
 def get_my_info_test() -> dict:
@@ -64,7 +35,7 @@ def get_my_info_test() -> dict:
     return {"type": "Admin"}
 
 
-@admin_router.get("/patients", tags=["User Management"])
+@admin_router.get("/patients", tags=["User Management"], response_model=List[PatientStripped])
 def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all patients in the system"""
 
@@ -72,15 +43,12 @@ def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info
         raise credentials_exception
 
     stmt = select(Patient)
-    patients = db.exec(stmt).all()
+    patients: list = db.exec(stmt).all()
 
-    #Strip sensitive data
-    patients_stripped = strip_sensitive_patient_data(patients)
-
-    return(patients_stripped)
+    return patients
 
 
-@admin_router.get("/doctors", tags=["User Management"])
+@admin_router.get("/doctors", tags=["User Management"], response_model=List[Doctor])
 def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all doctors in the system"""
 
@@ -140,7 +108,7 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
         return {"email": user.email, "type": "Other"}
 
 
-@admin_router.get("/patients/{pesel}", tags=["User Management"])
+@admin_router.get("/patients/{pesel}", tags=["User Management"], response_model=PatientStripped)
 def get_patient_info_endpoint(pesel: str, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific patient by their PESEL number"""
 
@@ -154,11 +122,9 @@ def get_patient_info_endpoint(pesel: str, db: Session = Depends(get_db), payload
     if not patient:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Patient not found")
 
-    patient_stripped = strip_sensitive_patient_data(patient)
+    return patient
 
-    return patient_stripped
-
-@admin_router.get("/doctors/{license_number}", tags=["DEV_NOT_FINAL"])
+@admin_router.get("/doctors/{license_number}", tags=["User Management"])
 def get_doctor_info_endpoint(license_number: str, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific patient by their PESEL number"""
 
@@ -178,7 +144,7 @@ def get_doctor_info_endpoint(license_number: str, db: Session = Depends(get_db),
 
     return output
 
-@admin_router.post("/patients/add", tags=["User Management"])
+@admin_router.post("/patients/add", status_code=status.HTTP_201_CREATED, tags=["User Management"])
 def create_new_patient(new_user_data: NewPatient, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
     """Create a new patient account and profile with the provided information."""
 
@@ -214,7 +180,7 @@ def create_new_patient(new_user_data: NewPatient, db: Session = Depends(get_db),
     return {"message": "Patient created", "patient_temp_password": password}
 
 
-@admin_router.post("/doctors/add", tags=["User Management"])
+@admin_router.post("/doctors/add", status_code=status.HTTP_201_CREATED, tags=["User Management"])
 def create_new_doctor(new_doctor_data: NewDoctor, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
     """Create a new doctor account and profile with the provided information."""
 

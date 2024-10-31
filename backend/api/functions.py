@@ -1,4 +1,3 @@
-from dulwich.porcelain import status
 from fastapi import HTTPException
 from fastapi.params import Depends
 from sqlmodel import select, Session
@@ -19,35 +18,28 @@ def get_my_info(payload: dict = Depends(verify_token), db: Session = Depends(get
     if not user:
         raise credentials_exception
 
-    if user.type.name == "Patient":
+    if user.type == "Patient":
         patient = db.query(Patient).where(Patient.id == user.link_id).first()
 
         if not patient:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
-        return {"email": user.email, "type": user.type.name, 'Patient': patient}
+        return {"email": user.email, "type": user.type, 'patient': patient.id}
 
-    elif user.type.name == "Doctor":
+    elif user.type == "Doctor":
         stmt = select(Doctor).where(Doctor.id == user.link_id)
         doctor = db.exec(stmt).first()
 
         if not doctor:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
+        return {"email": user.email, "type": user.type, 'doctor_id': doctor.id}
 
-        return {"email": user.email, "type": user.type.name, 'Doctor': Doctor}
+    elif user.type == "Admin":
 
-    elif user.type.name == "Admin":
-        # stmt = select(Patient).where(Patient.id == user.link_id)
-        # patient = db.exec(stmt).first()
-        #
-        # if not patient:
-        #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
-        #
-        # return {"email": user.email, "type": user.type.name, 'Patient': patient}
-        return {"email": user.email, "type": user.type.name, 'Admin': "UNIMPLEMENTED"}
+        return {"email": user.email, "type": user.type, 'Admin': "UNIMPLEMENTED"}
 
-    elif user.type.name == "Unassigned":
+    elif user.type == "Unassigned":
 
-        return {"email": user.email, "type": user.type.name}
+        return {"email": user.email, "type": user.type}
 
     else:
         return {"email": user.email, "type": "Other"}

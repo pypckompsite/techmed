@@ -26,6 +26,20 @@ class FacilityType(str, Enum):
     PHARMACY = "Pharmacy"
 
 
+class AppointmentStatus(str, Enum):
+    SCHEDULED = "Scheduled"
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+    NO_SHOW = "No Show"
+    CANCELLED = "Cancelled"
+
+
+class UserType(str, Enum):
+    Patient = "Patient"
+    Doctor = "Doctor"
+    Admin = "Admin"
+    Unassigned = "Unassigned"
+
 class DoctorFacilityAssociation(SQLModel, table=True):
     __tablename__ = "doctor_facility_association"
 
@@ -46,20 +60,6 @@ class MedicalFacility(SQLModel, table=True):
     doctors: List["Doctor"] = Relationship(back_populates="facilities", link_model=DoctorFacilityAssociation)
 
 
-
-class AppointmentStatus(SQLModel, table=True):
-    __tablename__ = "appointment_status"
-    id: int = Field(default=None, primary_key=True)
-    name: str = Field(max_length=32)
-
-    appointments: list["Appointment"] = Relationship(back_populates="status")
-
-class UserType(SQLModel, table=True):
-    __tablename__ = "user_type"
-    id: int = Field(default=None, primary_key=True)
-    name: str = Field(max_length=32)
-
-    users: list["User"] = Relationship(back_populates="type")
 
 class DoctorSpeciality(SQLModel, table=True):
     __tablename__ = "doctor_speciality"
@@ -106,10 +106,9 @@ class User(SQLModel, table=True):
     mfa_type: str | None = Field(default=None)
     otp_secret: str | None = None
     webauthn_key: str | None = None
-    type_id: int = Field(default=0, foreign_key="user_type.id")
     link_id: int | None = Field(default=None)
 
-    type: UserType = Relationship(back_populates="users")
+    type: UserType = Field(default=UserType.Unassigned)
 
 class Patient(SQLModel, table=True):
     __tablename__ = "patient"
@@ -148,7 +147,6 @@ class Appointment(SQLModel, table=True):
     __tablename__ = "appointment"
     id: int = Field(default=None, primary_key=True)
     date: datetime = Field(default=None)
-    status_id: int = Field(default=1, foreign_key="appointment_status.id")  # Ensure this refers to the correct AppointmentStatus table
     doctor_id: int = Field(foreign_key='doctor.id')
     patient_id: int = Field(foreign_key='patient.id')
     reason: str = Field(default=None)
@@ -156,7 +154,7 @@ class Appointment(SQLModel, table=True):
     diagnosis: str = Field(default=None)
     recommendations: str = Field(default=None)
 
-    status: AppointmentStatus = Relationship(back_populates="appointments")
+    status: AppointmentStatus = Field(default=AppointmentStatus.SCHEDULED)
     doctor: Doctor = Relationship(back_populates="appointments")
     patient: Patient = Relationship(back_populates="appointments")
 
@@ -173,7 +171,7 @@ class Prescription(SQLModel, table=True):
 
     doctor: Optional[Doctor] = Relationship(back_populates="prescriptions")     # Relationship to Doctor
     patient: Optional[Patient] = Relationship(back_populates="prescriptions")   # Relationship to Patient
-    items: List["PrescriptionItem"] = Relationship(back_populates="prescriptions")  # Relationship to PrescriptionItem
+    items: List["PrescriptionItem"] = Relationship(back_populates="prescription")  # Relationship to PrescriptionItem
 
 
 class Drug(SQLModel, table=True):
@@ -182,17 +180,18 @@ class Drug(SQLModel, table=True):
     name: str = Field(default=None)  # Drug name
     form: str = Field(default=None)  # Form of the drug
     strength: str = Field(default=None)  # Strength of the drug
+    active_substance: str = Field(default=None)
 
     prescription_items: List["PrescriptionItem"] = Relationship(back_populates="drug")  # Relationship to PrescriptionItem
 
 class PrescriptionItem(SQLModel, table=True):
-    __tablename__ = "prescriptionitem"
+    __tablename__ = "prescription_item"
     item_id: int = Field(default=None, primary_key=True)  # Unique identifier for the prescription item
     prescription_id: int = Field(foreign_key="prescription.prescription_id")  # ID of the prescription this item belongs to
     drug_id: int = Field(foreign_key="drug.drug_id") # Drug name
     dosage: str = Field(default=None)  # Drug dosage
     quantity: int = Field(default=None)  # Quantity of drug
 
-    prescriptions: Optional[Prescription] = Relationship(back_populates="items")  # Relationship to Prescription table
+    prescription: Optional[Prescription] = Relationship(back_populates="items")  # Relationship to Prescription table
     drug: Optional[Drug] = Relationship(back_populates="prescription_items")
 
