@@ -72,3 +72,4 @@ export default function HomePage() {
         </section>
     );
 }
+//TODO: pokazać że działa

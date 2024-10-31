@@ -13,8 +13,14 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
+import {redirect} from "next/navigation";
 
 export default function RootLayout({children}) {
+    const isAuthenticated = true; // TODO: Zmień tę logikę na swoją, np. sprawdzając token
+
+    if (!isAuthenticated) {
+        redirect('/login'); // Przekierowuje na stronę logowania
+    }
     return (
         <html lang="en">
         <body>

@@ -14,8 +14,8 @@ export default function LoginForm() {
     const [isSuccess, setIsSuccess] = useState(false);
     const router = useRouter();
 
-    const validateEmail = (email) => {//TODO: poprawic regex
-        const re = /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/;
+    const validateEmail = (email) => {//
+        const re = /^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$/;
         return re.test(String(email).toLowerCase());
     };
 
