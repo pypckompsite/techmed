@@ -9,6 +9,8 @@ import pyotp
 from starlette import status
 import secrets, string
 
+from api.models import *
+
 # Use Argon2 for hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto",
                             argon2__time_cost=25,
@@ -17,8 +19,13 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto",
                             argon2__hash_len=64,
                             argon2__salt_size=16)
 
-SECRET_KEY = "supersecretkey"
-ALGORITHM = "HS256"
+
+with open("DEV_private_key.pem", "r") as key_file:
+    private_key = key_file.read()
+with open("DEV_public_key.pem", "r") as key_file:
+    public_key = key_file.read()
+
+ALGORITHM = "RS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -51,29 +58,36 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+def create_token_from_user(user: User):
 
+
+    to_encode: dict = {"sub": user.email, "type": user.type}
+    expire = datetime.utcnow() + timedelta(hours=2)
+
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, private_key, algorithm=ALGORITHM)
+
+def create_token_from_data(sub: string, type: string):
+
+
+    to_encode: dict = {"sub": sub, "type": type}
+    expire = datetime.utcnow() + timedelta(hours=2)
+
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, private_key, algorithm=ALGORITHM)
 
 def verify_token(access_token: Annotated[str | None, Cookie()] = None):
     if not access_token:
         raise credentials_exception
     try:
         # Decode the JWT token
-        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(access_token, public_key, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
         return payload
-    except JWTError:
+    except JWTError as e:
         raise credentials_exception
-
 
 
 def encrypt_field(data: str):

@@ -21,9 +21,15 @@ print("Adding data to db...")
 # Poplate tables
 
 def insert_mock_data():
-    SQLModel.metadata.drop_all(engine)
-    SQLModel.metadata.create_all(engine)
+    try:
+        SQLModel.metadata.drop_all(engine)
+    except:
+        pass
 
+    try:
+        SQLModel.metadata.create_all(engine)
+    except:
+        pass
 
     with Session(engine) as session:
 
@@ -36,8 +42,10 @@ def insert_mock_data():
         ]
         admin = User(email=f"admin@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Admin, link_id=1)
         doctor = User(email=f"doctor@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Doctor, link_id=1)
+        unassigned = User(email=f"unassigned@example.com", hashed_password="$argon2id$v=19$m=131072,t=25,p=4$1to7p7Q2Rqh1rnUOASDEuA$EajgMftTz5z5uXA9mK5RS/K/z7IhTV5Jel3qq27mVbAIx0bxhD/aGM0jhYlkLPqRJnc+6NyN//tHYJMBr4TJBg", type=UserType.Unassigned)
         users.append(admin)
         users.append(doctor)
+        users.append(unassigned)
         session.add_all(users)
 
         # Patients

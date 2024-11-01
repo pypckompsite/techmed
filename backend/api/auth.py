@@ -2,19 +2,32 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
 
-from api.security import credentials_exception
+from api.security import credentials_exception, create_token_from_user, create_token_from_data
 from api.functions import *
 from api.models import *
 from api.database import get_db
-from api.security import hash_password, verify_password, create_token, verify_token
+from api.security import *
 from api.schemas import *
 
 auth_router = APIRouter()
 
 
 
-@auth_router.post("/register/", status_code=status.HTTP_201_CREATED, tags=["User Management"])
-def register_user(response: Response, email: Annotated[str, Form()], password: Annotated[str, Form()], db: Session = Depends(get_db)):
+@auth_router.post("/register/",
+                  status_code=status.HTTP_201_CREATED,
+                  tags=["User Management"],
+                  response_model=MessageSchema,
+                  responses = {
+                        400: {
+                            "description": "Bad Request",
+                            "model": ErrorSchema
+                        }
+                      }
+                    )
+def register_user(response: Response,
+                  email: Annotated[str, Form()],
+                  password: Annotated[str, Form()],
+                  db: Session = Depends(get_db)):
     """
     ### Register a New User
 
@@ -41,8 +54,7 @@ def register_user(response: Response, email: Annotated[str, Form()], password: A
     db.refresh(new_user)
 
     # Generate a JWT token for the newly registered user
-    access_token = create_token(data={"sub": new_user.email},
-                               expires_delta=timedelta(hours=2))
+    access_token = create_token_from_user(new_user)
 
     response.set_cookie(
         key="access_token",
@@ -53,7 +65,16 @@ def register_user(response: Response, email: Annotated[str, Form()], password: A
     )
     return {"message": "Register successful"}
 
-@auth_router.post("/login", tags=['Auth'])
+@auth_router.post("/login",
+                  tags=['Auth'],
+                  response_model=MessageSchema,
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
 def login(response: Response,
           email: Annotated[str, Form()],
           password: Annotated[str, Form()],
@@ -65,7 +86,7 @@ def login(response: Response,
     The token is valid for 2 hours, after which a new token must be obtained to continue making API calls.
     """
     stmt = select(User).where(User.email == email)
-    db_user = db.exec(stmt).first()
+    db_user: User = db.exec(stmt).first()
     if not db_user:
         hash_password(password)
         print("No such user")
@@ -73,20 +94,33 @@ def login(response: Response,
     elif not verify_password(password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     else:
-        access_token = create_token(data={"sub": db_user.email},
-                                    expires_delta=timedelta(hours=2))
+        access_token = create_token_from_user(db_user)
         response.set_cookie(
             key="access_token",
             value=access_token,
             httponly=True,
-            max_age=3 * 3600,  # Expires in 30 minutes
+            max_age=3 * 3600,
             secure=False,  # Set this to True in production to only send over HTTPS
         )
         return {"message": "Login successful"}
 
 
 
-@auth_router.post("/change_password", summary="Change current user's password", tags=["User Management"])
+@auth_router.post("/change_password",
+                  summary="Change current user's password",
+                  tags=["User Management"],
+                  response_model=MessageSchema,
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      },
+                      400: {
+                          "description": "Bad Request",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
 async def change_user_password(
         current_password: Annotated[str, Form()],
         new_password: Annotated[str, Form()],
@@ -122,7 +156,16 @@ async def change_user_password(
     return {"message": "Password change successful"}
 
 
-@auth_router.get("/extend_session", tags=['Auth'])
+@auth_router.get("/extend_session",
+                 tags=['Auth'],
+                 response_model=MessageSchema,
+                 responses={
+                     401: {
+                         "description": "Auth error",
+                         "model": ErrorSchema
+                     }
+                   }
+                 )
 def extend_session(response: Response, payload: dict = Depends(verify_token)):
     """
     ### API Endpoint: Extend Access Token
@@ -134,8 +177,7 @@ def extend_session(response: Response, payload: dict = Depends(verify_token)):
     email: str = payload.get("sub")
 
 
-    access_token = create_token(data={"sub": email},
-                                expires_delta=timedelta(hours=2))
+    access_token = create_token_from_data(email, payload.get("type"))
 
     response.set_cookie(
         key="access_token",
@@ -147,31 +189,53 @@ def extend_session(response: Response, payload: dict = Depends(verify_token)):
     return {"message": "Session extend successful"}
 
 
-@auth_router.get("/verify_token", tags=['Auth'])
-def extend_session(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
+@auth_router.get("/verify_token",
+                 tags=['Auth'],
+                 response_model=VerifyTokenResponse,
+                 responses={
+                     401: {
+                         "description": "Auth error",
+                         "model": ErrorSchema
+                     }
+                   }
+                 )
+def verify_token(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
     """
     ### API Endpoint: Verify Access Token
 
-    This endpoint allows you to obtain information about the user's access token.'
-
-    This returns following JSON:
-
-    {
-        "email": "user@example.com",
-        "type": "patient"
-    }
+    This endpoint allows you to obtain basic information about the user's access token. This includes email and user type'
     """
     email: str = payload.get("sub")
+    type: str = payload.get("type")
 
-    stmt = select(User).where(User.email == email)
-    user = db.exec(stmt).first()
-    if not user:
-        raise credentials_exception
 
-    return {"email": user.email, "type": user.type.name}
+    return {"email": email, "type": type}
 
 
 
-@auth_router.get("/get_my_info", tags=['User Management'])
+@auth_router.get("/get_my_info",
+                 tags=['User Management'],
+                 response_model=Union[GetUserInfoResponsePatient, GetUserInfoResponseDoctor, GetUserInfoResponseAdmin],
+                 responses={
+                     401: {
+                         "description": "Auth error",
+                         "model": ErrorSchema
+                     }
+                   }
+                 )
 def get_info(payload: dict = Depends(get_my_info)):
-   return payload
+    """
+    ### API Endpoint: Get My Information
+
+    This endpoint allows you to obtain extended information about the user's access token. This includes email, type and stripped versions of (Patient, Doctor) entries'
+    """
+    if payload["type"] == "patient":
+       return GetUserInfoResponsePatient(email=payload["email"], type=payload["type"], patient=payload["patient"])
+    elif payload["type"] == "doctor":
+       return GetUserInfoResponseDoctor(email=payload["email"], type=payload["type"], doctor=payload["doctor"])
+    elif payload["type"] == "admin":
+        return  GetUserInfoResponseAdmin(email=payload["email"], type=payload["type"])
+    elif payload["type"] == "unassigned":
+        return  GetUserInfoResponseAdmin(email=payload["email"], type=payload["type"])
+
+    return payload

@@ -5,13 +5,14 @@ from api.functions import *
 from api.models import *
 from api.database import get_db
 from api.security import credentials_exception
+from api.schemas import *
 
 from api.insert_mock_data import *
 
 misc_router = APIRouter()
 
 
-@misc_router.get("/get_doctor_specialities", tags=["misc"])
+@misc_router.get("/get_doctor_specialities", tags=["misc"], response_model=List[DoctorSpeciality])
 def get_doctor_specialities(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
 
     if not payload:
@@ -22,7 +23,7 @@ def get_doctor_specialities(db: Session = Depends(get_db), payload: dict = Depen
 
     return specialities
 
-@misc_router.get("/get_appointment_statuses", tags=["DEV"])
+@misc_router.get("/get_appointment_statuses", tags=["DEV"], response_model=List[AppointmentStatusSchema])
 def get_appointment_statuses(db: Session = Depends(get_db), payload: dict = Depends(verify_token)):
 
     if not payload:
@@ -40,3 +41,5 @@ def get_appointment_statuses(db: Session = Depends(get_db), payload: dict = Depe
 @misc_router.get("/reset_db", tags=["misc"])
 def reset_db():
     insert_mock_data()
+
+    return "OK"

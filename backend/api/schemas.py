@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, constr
 from sqlmodel import SQLModel
 from starlette import status
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime,date
 
 from api.models import *
@@ -52,7 +52,7 @@ class ChangePassword(PasswordMixin):
     current_password: str
 
 class PESELMixin(BaseModel):
-    PESEL: str
+    PESEL: constr(min_length=11, max_length=11)
 
     @field_validator("PESEL")
     def validate_pesel(cls, value):
@@ -148,7 +148,7 @@ class NewDoctor(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
     last_name: constr(min_length=3, max_length=32)
     license_number: constr(min_length=5, max_length=5)
     hire_date: date
-    speciality_id: int
+    speciality: DoctorSpeciality
 
     @field_validator("first_name")
     def validate_first_name(cls, value):
@@ -185,10 +185,10 @@ class NewDoctor(EmailMixin, PESELMixin, GenderMixin, PhoneNUmberMixin):
 
 
 class PatientStripped(SQLModel):
-    first_name: str
-    middle_name: str | None
-    last_name: str
-    gender: str
+    first_name: str = Field(max_length=32)
+    middle_name: str | None = Field(max_length=32)
+    last_name: str = Field(max_length=64)
+    gender: str = Field(min_length=1, max_length=1)
 
 class UserStripped(SQLModel):
     id: int
@@ -198,8 +198,9 @@ class UserStripped(SQLModel):
     type: UserType
 
 class DoctorStripped(SQLModel):
+    id: int
     first_name: str = Field(max_length=32)
-    middle_name: str = Field(max_length=32)
+    middle_name: str | None = Field(max_length=32)
     last_name: str = Field(max_length=64)
     phone_number: str = Field(max_length=16)
     license_number: str = Field(max_length=16)
@@ -216,3 +217,44 @@ class AppointmentWithPatient(SQLModel):
     status: AppointmentStatus
     patient: PatientStripped  # Include patient information in the response
 
+class AppointmentsQuery(SQLModel):
+    start_date: Optional[date]
+    end_date: Optional[date]
+    appointment_status: Optional[Union[AppointmentStatus, str]]
+
+class AppointmentStatusSchema(SQLModel):
+    id: str
+    name: str
+
+class MessageSchema(SQLModel):
+    message: str
+
+class ErrorSchema(SQLModel):
+    details: str
+
+class VerifyTokenResponse(SQLModel):
+    email: str
+    type: UserType
+
+class GetUserInfoResponsePatient(SQLModel):
+    email: str
+    type: UserType
+    patient: PatientStripped
+
+class GetUserInfoResponseDoctor(SQLModel):
+    email: str
+    type: UserType
+    doctor: DoctorStripped
+
+class GetUserInfoResponseAdmin(SQLModel):
+    email: str
+    type: UserType
+
+
+class NewPatientResponse(SQLModel):
+    message: str
+    patient_temp_password: str
+
+class NewDoctorResponse(SQLModel):
+    message: str
+    doctor_temp_password: str

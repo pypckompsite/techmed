@@ -16,8 +16,18 @@ admin_router = APIRouter()
 
 
 
-@admin_router.get("/users", tags=["User Management"], response_model=List[UserStripped])
-def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
+@admin_router.get("/users",
+                  tags=["User Management"],
+                  response_model=List[UserStripped],
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
+def get_users(db: Session = Depends(get_db),
+              payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all registered users in the system"""
 
     if not payload or payload["type"] != "Admin":
@@ -30,13 +40,19 @@ def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info
     return(users)
 
 
-def get_my_info_test() -> dict:
-    # Example payload for demonstration, replace with actual logic
-    return {"type": "Admin"}
 
-
-@admin_router.get("/patients", tags=["User Management"], response_model=List[PatientStripped])
-def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
+@admin_router.get("/patients",
+                  tags=["User Management"],
+                  response_model=List[PatientStripped],
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
+def get_users(db: Session = Depends(get_db),
+              payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all patients in the system"""
 
     if not payload or payload["type"] != "Admin":
@@ -48,8 +64,18 @@ def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info
     return patients
 
 
-@admin_router.get("/doctors", tags=["User Management"], response_model=List[Doctor])
-def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info)) -> list:
+@admin_router.get("/doctors",
+                  tags=["User Management"],
+                  response_model=List[DoctorStripped],
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      }
+                  }
+                  )
+def get_users(db: Session = Depends(get_db),
+              payload: dict = Depends(get_my_info)) -> list:
     """Retrieve a list of all doctors in the system"""
 
     if not payload or payload["type"] != "Admin":
@@ -58,10 +84,25 @@ def get_users(db: Session = Depends(get_db), payload: dict = Depends(get_my_info
     stmt = select(Doctor)
     doctors = db.exec(stmt).all()
 
-    return(doctors)
+    return doctors
 
-@admin_router.get("/users/{user_id}", tags=["User Management"])
-def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+@admin_router.get("/users/{user_id}",
+                  tags=["User Management"],
+                  response_model=Union[GetUserInfoResponseDoctor, GetUserInfoResponseAdmin, GetUserInfoResponsePatient],
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      },
+                      400: {
+                          "description": "Bad Request",
+                          "model": ErrorSchema
+                      }
+                  }
+                  )
+def get_user_info_endpoint(user_id: int,
+                           db: Session = Depends(get_db),
+                           payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific user by their ID"""
 
     if not payload or payload["type"] != "Admin":
@@ -79,7 +120,7 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
 
         if not patient:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
-        return {"email": user.email, "type": user.type.name, 'Patient': patient}
+        return GetUserInfoResponsePatient(email=user.email, type=user.type.name, patient=patient)
 
     elif user.type.name == "Doctor":
         stmt = select(Doctor).where(Doctor.id == user.link_id)
@@ -88,7 +129,7 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
         if not doctor:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
 
-        return {"email": user.email, "type": user.type.name, 'Doctor': Doctor}
+        return GetUserInfoResponseDoctor(email=user.email, type=user.type.name, doctor=Doctor)
 
     elif user.type.name == "Admin":
         # stmt = select(Patient).where(Patient.id == user.link_id)
@@ -98,7 +139,7 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
         #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Fatal DB error")
         #
         # return {"email": user.email, "type": user.type.name, 'Patient': patient}
-        return {"email": user.email, "type": user.type.name, 'Admin': "UNIMPLEMENTED"}
+        return  GetUserInfoResponseAdmin(email=user.email, type=user.type.name)
 
     elif user.type.name == "Unassigned":
 
@@ -108,8 +149,23 @@ def get_user_info_endpoint(user_id: int, db: Session = Depends(get_db), payload:
         return {"email": user.email, "type": "Other"}
 
 
-@admin_router.get("/patients/{pesel}", tags=["User Management"], response_model=PatientStripped)
-def get_patient_info_endpoint(pesel: str, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+@admin_router.get("/patients/{pesel}",
+                  tags=["User Management"],
+                  response_model=PatientStripped,
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      },
+                      400: {
+                          "description": "Bad Request",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
+def get_patient_info_endpoint(pesel: str,
+                              db: Session = Depends(get_db),
+                              payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific patient by their PESEL number"""
 
     if not payload or payload["type"] != "Admin":
@@ -124,8 +180,23 @@ def get_patient_info_endpoint(pesel: str, db: Session = Depends(get_db), payload
 
     return patient
 
-@admin_router.get("/doctors/{license_number}", tags=["User Management"])
-def get_doctor_info_endpoint(license_number: str, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+@admin_router.get("/doctors/{license_number}",
+                  tags=["User Management"],
+                  response_model=DoctorStripped,
+                  responses={
+                      401: {
+                          "description": "Auth error",
+                          "model": ErrorSchema
+                      },
+                      400: {
+                          "description": "Bad Request",
+                          "model": ErrorSchema
+                      }
+                    }
+                  )
+def get_doctor_info_endpoint(license_number: str,
+                             db: Session = Depends(get_db),
+                             payload: dict = Depends(get_my_info)):
     """Fetch detailed information about a specific patient by their PESEL number"""
 
     if not payload or payload["type"] != "Admin":
@@ -144,8 +215,24 @@ def get_doctor_info_endpoint(license_number: str, db: Session = Depends(get_db),
 
     return output
 
-@admin_router.post("/patients/add", status_code=status.HTTP_201_CREATED, tags=["User Management"])
-def create_new_patient(new_user_data: NewPatient, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+@admin_router.post("/patients/add",
+                   status_code=status.HTTP_201_CREATED,
+                   tags=["User Management"],
+                   response_model=NewPatientResponse,
+                   responses={
+                       401: {
+                           "description": "Auth error",
+                           "model": ErrorSchema
+                       },
+                       400: {
+                           "description": "Bad Request",
+                           "model": ErrorSchema
+                       }
+                     }
+                   )
+def create_new_patient(new_user_data: NewPatient,
+                       db: Session = Depends(get_db),
+                       payload: dict = Depends(get_my_info)):
     """Create a new patient account and profile with the provided information."""
 
     if not payload or payload["type"] != "Admin":
@@ -180,8 +267,24 @@ def create_new_patient(new_user_data: NewPatient, db: Session = Depends(get_db),
     return {"message": "Patient created", "patient_temp_password": password}
 
 
-@admin_router.post("/doctors/add", status_code=status.HTTP_201_CREATED, tags=["User Management"])
-def create_new_doctor(new_doctor_data: NewDoctor, db: Session = Depends(get_db), payload: dict = Depends(get_my_info)):
+@admin_router.post("/doctors/add",
+                   status_code=status.HTTP_201_CREATED,
+                   tags=["User Management"],
+                   response_model=NewDoctorResponse,
+                   responses={
+                       401: {
+                           "description": "Auth error",
+                           "model": ErrorSchema
+                       },
+                       400: {
+                           "description": "Bad Request",
+                           "model": ErrorSchema
+                       }
+                    }
+                   )
+def create_new_doctor(new_doctor_data: NewDoctor,
+                      db: Session = Depends(get_db),
+                      payload: dict = Depends(get_my_info)):
     """Create a new doctor account and profile with the provided information."""
 
     if not payload or payload["type"] != "Admin":
@@ -200,7 +303,7 @@ def create_new_doctor(new_doctor_data: NewDoctor, db: Session = Depends(get_db),
                         phone_number=new_doctor_data.phone_number,
                         license_number=new_doctor_data.license_number,
                         hire_date=new_doctor_data.hire_date,
-                        speciality_id=new_doctor_data.speciality_id)
+                        speciality=new_doctor_data.speciality)
     db.add(new_doctor)
     db.commit()
     db.refresh(new_doctor)
@@ -215,4 +318,4 @@ def create_new_doctor(new_doctor_data: NewDoctor, db: Session = Depends(get_db),
     db.add(new_user)
     db.commit()
 
-    return {"message": "Doctor created", "patient_doctor_password": password}
+    return {"message": "Doctor created", "doctor_temp_password": password}
